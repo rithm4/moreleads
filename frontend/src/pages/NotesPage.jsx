@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Pencil, Trash2, Lock, Globe } from 'lucide-react';
+import { Plus, Pencil, Trash2, Lock, Globe, FileText } from 'lucide-react';
 import { NoteModal } from '../components/Notes/NoteModal';
 import { Spinner } from '../components/UI/Spinner';
 import { useAuth } from '../hooks/useAuth';
@@ -46,13 +46,13 @@ export default function NotesPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <h1>Notițe</h1>
+        <h1 className="page-title"><FileText size={22} /> Notițe</h1>
         <button className="btn-primary" onClick={() => setModal({})}>
           <Plus size={16} /> Notiță nouă
         </button>
       </div>
 
-      <div className="filter-tabs">
+      <div className="filter-tabs" style={{ marginBottom: '16px' }}>
         {['all', 'mine', 'public'].map(f => (
           <button
             key={f}
@@ -89,8 +89,8 @@ export default function NotesPage() {
                 <span className="note-meta">{note.owner_name} · {new Date(note.updated_at).toLocaleDateString('ro-RO')}</span>
                 {(note.owner_id === user.id || user.role === 'admin') && (
                   <div className="note-actions">
-                    <button onClick={() => setModal({ note })} title="Editează"><Pencil size={13} /></button>
-                    <button onClick={() => handleDelete(note.id)} title="Șterge"><Trash2 size={13} /></button>
+                    <button className="btn-icon" onClick={() => setModal({ note })} title="Editează"><Pencil size={13} /></button>
+                    <button className="btn-icon danger" onClick={() => handleDelete(note.id)} title="Șterge"><Trash2 size={13} /></button>
                   </div>
                 )}
               </div>

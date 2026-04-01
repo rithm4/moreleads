@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
+import { BottomNav } from './BottomNav';
 
 export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -16,6 +17,7 @@ export function Layout() {
         <main className={isChat ? 'page-content page-content-chat' : 'page-content'}>
           <Outlet />
         </main>
+        <BottomNav />
       </div>
     </div>
   );

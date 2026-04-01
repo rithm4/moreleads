@@ -336,70 +336,155 @@ th:hover .col-delete { opacity: 1; }
 .empty-row { text-align: center; color: var(--text-3); padding: 20px; }
 .sheet-loading { padding: 24px; display: flex; justify-content: center; }
 
+/* ── BOTTOM NAV (mobile only, hidden desktop) ── */
+.bottom-nav { display: none; }
+
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
-  /* Sidebar overlay */
-  .sidebar { position: fixed; left: 0; top: 0; bottom: 0; transform: translateX(-100%); z-index: 200; }
+  /* Sidebar drawer */
+  .sidebar { position: fixed; left: 0; top: 0; bottom: 0; transform: translateX(-100%); z-index: 300; width: 240px; }
   .sidebar.open { transform: translateX(0); box-shadow: var(--shadow-lg); }
-  .sidebar-overlay { display: block; }
+  .sidebar-overlay { display: block; z-index: 299; }
   .sidebar-close { display: flex; }
   .topbar-menu-btn { display: flex; }
+  .topbar-name { display: none; }
 
-  /* Layout */
-  .page-content { padding: 14px; }
-  .page-header { flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
-  .page-title { font-size: 17px; }
+  /* Page layout — leave room for bottom nav */
+  .page-content { padding: 16px 14px 80px; }
+  .page-content-chat { padding: 0 !important; padding-bottom: 0 !important; }
+  .page-header { flex-wrap: nowrap; gap: 10px; margin-bottom: 16px; align-items: center; }
+  .page-title { font-size: 16px; gap: 6px; }
+  .page-subtitle { font-size: 12px; }
 
-  /* Modal — full width on mobile */
-  .modal-backdrop { padding: 12px; align-items: flex-end; }
-  .modal, .modal-box { border-radius: 16px 16px 0 0; max-height: 92vh; max-width: 100%; }
+  /* Bottom navigation */
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    z-index: 200;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -4px 16px rgba(0,0,0,.06);
+  }
+  .bottom-nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 8px 4px 6px; gap: 3px; color: var(--text-3); font-size: 10px; font-weight: 500;
+    transition: color .15s; text-decoration: none;
+  }
+  .bottom-nav-item.active { color: var(--primary); }
+  .bottom-nav-item svg { flex-shrink: 0; }
 
-  /* Grids → single column */
-  .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-  .dash-grid { grid-template-columns: 1fr; }
-  .contacts-grid { grid-template-columns: 1fr; }
-  .projects-grid { grid-template-columns: 1fr; }
-  .notes-grid { grid-template-columns: 1fr; }
-  .team-grid { grid-template-columns: 1fr; }
+  /* Modal — bottom sheet */
+  .modal-backdrop { padding: 0; align-items: flex-end; background: rgba(0,0,0,.5); }
+  .modal, .modal-box {
+    border-radius: 20px 20px 0 0;
+    max-height: 90vh; max-width: 100%; width: 100%;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .modal-header { padding: 16px 18px 0; }
+  .modal-body { padding: 14px 18px 20px; }
+
+  /* Grids */
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .dash-grid { grid-template-columns: 1fr; gap: 12px; }
+  .contacts-grid { grid-template-columns: 1fr; gap: 10px; }
+  .projects-grid { grid-template-columns: 1fr; gap: 10px; }
+  .notes-grid { grid-template-columns: 1fr; gap: 10px; }
+  .team-grid { grid-template-columns: 1fr; gap: 8px; }
   .form-row { grid-template-columns: 1fr; gap: 0; }
 
-  /* Kanban — horizontal scroll */
-  .kanban-board { gap: 10px; }
-  .kanban-column { flex: 0 0 240px; }
-  .pipeline-board { gap: 8px; }
-  .pipeline-column { flex: 0 0 180px; }
-  .pipeline-col-header { padding: 8px 10px 6px; }
-  .deal-card { padding: 8px 10px; }
+  /* Stat cards smaller */
+  .stat-card { padding: 14px; gap: 12px; }
+  .stat-icon { width: 38px; height: 38px; border-radius: 10px; }
+  .stat-value { font-size: 20px; }
+  .stat-label { font-size: 11.5px; }
 
   /* Dashboard panels */
   .dash-panel { padding: 14px; }
-  .stat-card { padding: 14px; }
-  .stat-value { font-size: 18px; }
+  .dash-list-item { padding: 8px; }
+  .dash-item-title { font-size: 13px; }
+  .dash-panel-header h3 { font-size: 13px; }
 
-  /* Chat */
-  .chat-sidebar { width: 140px; }
-  .chat-sidebar-header { font-size: 10px; padding: 10px 8px 8px; }
-  .chan-item { font-size: 12px; padding: 6px 8px; }
-  .chat-messages { padding: 12px; }
-  .chat-input-row { padding: 8px 12px; }
+  /* Kanban — horizontal snap scroll */
+  .kanban-board {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 10px;
+    padding-bottom: 8px;
+    margin: 0 -14px;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .kanban-column { flex: 0 0 78vw; max-width: 300px; scroll-snap-align: start; }
+  .kanban-col-body { max-height: calc(100vh - 280px); }
+
+  /* Pipeline — horizontal snap scroll */
+  .pipeline-board {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 8px;
+    margin: 0 -14px;
+    padding-left: 14px;
+    padding-right: 14px;
+    min-height: auto;
+  }
+  .pipeline-column { flex: 0 0 72vw; max-width: 260px; scroll-snap-align: start; }
+
+  /* Filter tabs — horizontal scroll */
+  .filter-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+  .filter-tabs::-webkit-scrollbar { display: none; }
+
+  /* Contacts */
+  .contact-card-top { gap: 8px; }
+  .contact-avatar { width: 34px; height: 34px; border-radius: 8px; font-size: 12px; }
+  .list-controls { gap: 8px; }
+
+  /* Notes */
+  .note-card { padding: 14px; }
+  .note-title { font-size: 13.5px; }
+
+  /* Projects */
+  .project-card-content { padding: 12px 14px; }
+
+  /* Chat — channels as bottom sheet tab on mobile */
+  .chat-layout { flex-direction: column; }
+  .chat-sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid rgba(255,255,255,.1); flex-direction: row; align-items: center; max-height: 52px; overflow: hidden; }
+  .chat-sidebar-header { border-bottom: none; flex-shrink: 0; padding: 0 12px; font-size: 11px; }
+  .chan-list { flex-direction: row; overflow-x: auto; padding: 6px 8px; gap: 4px; }
+  .chan-list::-webkit-scrollbar { display: none; }
+  .chan-item { padding: 5px 12px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+  .chan-new { margin: 4px; }
+  .chat-messages { padding: 12px 14px; }
+  .chat-input-row { padding: 8px 14px 14px; }
+  .msg-avatar { width: 28px; height: 28px; font-size: 11px; border-radius: 7px; }
+  .msg-avatar-gap { width: 28px; }
+  .msg-bubble { font-size: 13.5px; }
+
+  /* Team */
+  .team-invite-box { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .team-card { padding: 12px; }
 
   /* Login */
-  .login-card { padding: 28px 20px; }
+  .login-card { padding: 28px 18px; }
+  .login-logo h1 { font-size: 20px; }
 
-  /* Team invite */
-  .team-invite-box { flex-direction: column; align-items: flex-start; }
+  /* Page-wide on mobile = full width too */
+  .page, .page-wide { max-width: 100%; }
 }
 
-@media (max-width: 480px) {
-  .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-  .stat-card { padding: 12px; gap: 10px; }
-  .stat-icon { width: 36px; height: 36px; }
-  .stat-value { font-size: 20px; }
-  .page-content { padding: 10px; }
-  .kanban-column { flex: 0 0 200px; }
-  .pipeline-column { flex: 0 0 160px; }
-  .page-header { margin-bottom: 12px; }
-  .chat-sidebar { width: 120px; }
+@media (max-width: 420px) {
+  .page-content { padding: 12px 12px 80px; }
+  .stats-grid { gap: 8px; }
+  .stat-card { padding: 12px 10px; gap: 10px; }
+  .stat-value { font-size: 18px; }
+  .stat-icon { width: 34px; height: 34px; }
+  .kanban-column { flex: 0 0 85vw; }
+  .pipeline-column { flex: 0 0 80vw; }
+  .btn-primary { padding: 7px 12px; font-size: 13px; }
+  .page-title { font-size: 15px; }
 }
 
 /* ── PROJECTS redesign ── */
