@@ -8,6 +8,9 @@ import usersRoutes from './routes/users.js';
 import tasksRoutes from './routes/tasks.js';
 import notesRoutes from './routes/notes.js';
 import filesRoutes from './routes/files.js';
+import projectsRoutes from './routes/projects.js';
+import projectFilesRoutes from './routes/project-files.js';
+import spreadsheetsRoutes from './routes/spreadsheets.js';
 
 const app = express();
 
@@ -27,6 +30,9 @@ app.use('/api/users', usersRoutes);
 app.use('/api/tasks', tasksRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/files', filesRoutes);
+app.use('/api/projects', projectsRoutes);
+app.use('/api/projects', projectFilesRoutes);
+app.use('/api/projects', spreadsheetsRoutes);
 
 app.get('/', (req, res) => res.json({ status: 'API appnou ok' }));
 

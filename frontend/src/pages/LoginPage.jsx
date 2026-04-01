@@ -33,7 +33,7 @@ export default function LoginPage() {
       <div className="login-card">
         <div className="login-logo">
           <span className="login-logo-icon">⚡</span>
-          <h1>AppNou Hub</h1>
+          <h1>Moreleads Hub</h1>
           <p>Platforma internă de echipă</p>
         </div>
 
