@@ -1,10 +1,13 @@
 import { NavLink } from 'react-router-dom';
-import { CheckSquare, FileText, FolderKanban, X } from 'lucide-react';
+import { LayoutDashboard, Users, TrendingUp, CheckSquare, FileText, FolderKanban, X } from 'lucide-react';
 
 const links = [
-  { to: '/projects', icon: FolderKanban, label: 'Proiecte' },
-  { to: '/tasks', icon: CheckSquare, label: 'Taskuri' },
-  { to: '/notes', icon: FileText, label: 'Notițe' },
+  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/contacts',  icon: Users,           label: 'Clienți' },
+  { to: '/pipeline',  icon: TrendingUp,       label: 'Pipeline' },
+  { to: '/projects',  icon: FolderKanban,     label: 'Proiecte' },
+  { to: '/tasks',     icon: CheckSquare,      label: 'Taskuri' },
+  { to: '/notes',     icon: FileText,         label: 'Notițe' },
 ];
 
 export function Sidebar({ open, onClose }) {
@@ -13,7 +16,10 @@ export function Sidebar({ open, onClose }) {
       {open && <div className="sidebar-overlay" onClick={onClose} />}
       <aside className={`sidebar ${open ? 'open' : ''}`}>
         <div className="sidebar-header">
-          <span className="sidebar-logo">⚡ Moreleads Hub</span>
+          <div className="sidebar-logo">
+            <div className="sidebar-logo-icon">⚡</div>
+            Moreleads Hub
+          </div>
           <button className="sidebar-close" onClick={onClose}><X size={18} /></button>
         </div>
         <nav className="sidebar-nav">
@@ -24,7 +30,7 @@ export function Sidebar({ open, onClose }) {
               className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
               onClick={onClose}
             >
-              <Icon size={18} />
+              <Icon size={17} />
               <span>{label}</span>
             </NavLink>
           ))}

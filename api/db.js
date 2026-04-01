@@ -78,4 +78,34 @@ export async function initSchema() {
       created_at     TIMESTAMPTZ DEFAULT NOW()
     )
   `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS contacts (
+      id         SERIAL PRIMARY KEY,
+      name       TEXT NOT NULL,
+      company    TEXT,
+      email      TEXT,
+      phone      TEXT,
+      website    TEXT,
+      status     TEXT NOT NULL DEFAULT 'prospect',
+      notes      TEXT,
+      created_by INTEGER NOT NULL REFERENCES users(id),
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS deals (
+      id          SERIAL PRIMARY KEY,
+      title       TEXT NOT NULL,
+      value       NUMERIC(12,2) DEFAULT 0,
+      stage       TEXT NOT NULL DEFAULT 'lead',
+      position    INTEGER NOT NULL DEFAULT 0,
+      contact_id  INTEGER REFERENCES contacts(id) ON DELETE SET NULL,
+      assigned_to INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      created_by  INTEGER NOT NULL REFERENCES users(id),
+      notes       TEXT,
+      created_at  TIMESTAMPTZ DEFAULT NOW(),
+      updated_at  TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
 }

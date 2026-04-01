@@ -7,6 +7,9 @@ import usersRoutes from './routes/users.js';
 import tasksRoutes from './routes/tasks.js';
 import notesRoutes from './routes/notes.js';
 import projectsRoutes from './routes/projects.js';
+import contactsRoutes from './routes/contacts.js';
+import dealsRoutes from './routes/deals.js';
+import dashboardRoutes from './routes/dashboard.js';
 
 const app = express();
 
@@ -35,6 +38,9 @@ app.use('/api/users', usersRoutes);
 app.use('/api/tasks', tasksRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/projects', projectsRoutes);
+app.use('/api/contacts', contactsRoutes);
+app.use('/api/deals', dealsRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 app.get('/api', (req, res) => res.json({ status: 'Moreleads Hub API ok' }));
 

@@ -3,10 +3,13 @@ import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/Auth/ProtectedRoute';
 import { Layout } from './components/Layout/Layout';
 import LoginPage from './pages/LoginPage';
-import TasksPage from './pages/TasksPage';
-import NotesPage from './pages/NotesPage';
+import DashboardPage from './pages/DashboardPage';
+import ContactsPage from './pages/ContactsPage';
+import PipelinePage from './pages/PipelinePage';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
+import TasksPage from './pages/TasksPage';
+import NotesPage from './pages/NotesPage';
 
 export default function App() {
   return (
@@ -22,7 +25,10 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="/projects" replace />} />
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="dashboard" element={<DashboardPage />} />
+            <Route path="contacts" element={<ContactsPage />} />
+            <Route path="pipeline" element={<PipelinePage />} />
             <Route path="projects" element={<ProjectsPage />} />
             <Route path="projects/:id" element={<ProjectDetailPage />} />
             <Route path="tasks" element={<TasksPage />} />
