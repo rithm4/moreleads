@@ -11,7 +11,13 @@ import filesRoutes from './routes/files.js';
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: ['https://moreleads.vercel.app', 'http://localhost:5173'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+app.options('*', cors());
 app.use(express.json());
 
 initSchema();
