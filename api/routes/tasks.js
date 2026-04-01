@@ -1,0 +1,61 @@
+import { Router } from 'express';
+import sql from '../db.js';
+import { auth } from '../middleware.js';
+
+const router = Router();
+router.use(auth);
+
+router.get('/', async (req, res) => {
+  const tasks = await sql`
+    SELECT t.*, u.name as assigned_name, c.name as creator_name
+    FROM tasks t
+    LEFT JOIN users u ON t.assigned_to = u.id
+    LEFT JOIN users c ON t.created_by = c.id
+    ORDER BY t.status, t.position
+  `;
+  res.json(tasks);
+});
+
+router.post('/', async (req, res) => {
+  const { title, description, assigned_to } = req.body;
+  if (!title) return res.status(400).json({ error: 'Titlul este obligatoriu' });
+  const maxPos = await sql`SELECT MAX(position) as m FROM tasks WHERE status = 'todo'`;
+  const position = (maxPos[0].m ?? -1) + 1;
+  const rows = await sql`
+    INSERT INTO tasks (title, description, assigned_to, created_by, position)
+    VALUES (${title}, ${description || null}, ${assigned_to || null}, ${req.user.id}, ${position})
+    RETURNING id
+  `;
+  const task = await sql`
+    SELECT t.*, u.name as assigned_name, c.name as creator_name
+    FROM tasks t LEFT JOIN users u ON t.assigned_to = u.id LEFT JOIN users c ON t.created_by = c.id
+    WHERE t.id = ${rows[0].id}
+  `;
+  res.json(task[0]);
+});
+
+router.put('/:id', async (req, res) => {
+  const { title, description, assigned_to } = req.body;
+  await sql`UPDATE tasks SET title=${title}, description=${description || null}, assigned_to=${assigned_to || null}, updated_at=NOW() WHERE id=${req.params.id}`;
+  const task = await sql`
+    SELECT t.*, u.name as assigned_name, c.name as creator_name
+    FROM tasks t LEFT JOIN users u ON t.assigned_to = u.id LEFT JOIN users c ON t.created_by = c.id
+    WHERE t.id = ${req.params.id}
+  `;
+  res.json(task[0]);
+});
+
+router.patch('/:id/move', async (req, res) => {
+  const { status, position } = req.body;
+  const valid = ['todo', 'inprogress', 'done'];
+  if (!valid.includes(status)) return res.status(400).json({ error: 'Status invalid' });
+  await sql`UPDATE tasks SET status=${status}, position=${position}, updated_at=NOW() WHERE id=${req.params.id}`;
+  res.json({ ok: true });
+});
+
+router.delete('/:id', async (req, res) => {
+  await sql`DELETE FROM tasks WHERE id = ${req.params.id}`;
+  res.json({ ok: true });
+});
+
+export default router;

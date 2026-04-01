@@ -1,11 +1,10 @@
 import { NavLink } from 'react-router-dom';
-import { CheckSquare, FileText, Paperclip, X, FolderKanban } from 'lucide-react';
+import { CheckSquare, FileText, FolderKanban, X } from 'lucide-react';
 
 const links = [
   { to: '/projects', icon: FolderKanban, label: 'Proiecte' },
   { to: '/tasks', icon: CheckSquare, label: 'Taskuri' },
   { to: '/notes', icon: FileText, label: 'Notițe' },
-  { to: '/files', icon: Paperclip, label: 'Fișiere' },
 ];
 
 export function Sidebar({ open, onClose }) {
