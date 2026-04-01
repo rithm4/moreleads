@@ -10,6 +10,7 @@ import projectsRoutes from './routes/projects.js';
 import contactsRoutes from './routes/contacts.js';
 import dealsRoutes from './routes/deals.js';
 import dashboardRoutes from './routes/dashboard.js';
+import chatRoutes from './routes/chat.js';
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.use('/api/projects', projectsRoutes);
 app.use('/api/contacts', contactsRoutes);
 app.use('/api/deals', dealsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/chat', chatRoutes);
 
 app.get('/api', (req, res) => res.json({ status: 'Moreleads Hub API ok' }));
 

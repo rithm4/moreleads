@@ -15,17 +15,18 @@ export function TaskCard({ task, index, onEdit, onDelete }) {
           {...provided.draggableProps}
           {...provided.dragHandleProps}
         >
-          <p className="task-title">{task.title}</p>
-          {task.description && <p className="task-desc">{task.description}</p>}
-          <div className="task-footer">
+          <div className="task-card-title">{task.title}</div>
+          {task.description && <div className="task-card-desc">{task.description}</div>}
+          <div className="task-card-footer">
             {initials ? (
-              <span className="task-avatar" title={task.assigned_name}>{initials}</span>
-            ) : (
-              <span />
-            )}
-            <div className="task-actions">
-              <button onClick={() => onEdit(task)} title="Editează"><Pencil size={13} /></button>
-              <button onClick={() => onDelete(task.id)} title="Șterge"><Trash2 size={13} /></button>
+              <div className="task-assignee">
+                <span className="mini-avatar">{initials}</span>
+                <span>{task.assigned_name}</span>
+              </div>
+            ) : <span />}
+            <div className="task-card-actions">
+              <button className="btn-icon" onClick={() => onEdit(task)} title="Editează"><Pencil size={12} /></button>
+              <button className="btn-icon danger" onClick={() => onDelete(task.id)} title="Șterge"><Trash2 size={12} /></button>
             </div>
           </div>
         </div>

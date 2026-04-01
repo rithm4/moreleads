@@ -1,26 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FolderKanban, Plus, Trash2, ChevronRight, Folder } from 'lucide-react';
+import { FolderKanban, Plus, Trash2, ChevronRight, Folder, ArrowRight } from 'lucide-react';
 import api from '../api/axios';
 import { Modal } from '../components/UI/Modal';
 import { Spinner } from '../components/UI/Spinner';
 
 const COLORS = ['#6366f1','#10b981','#f59e0b','#ef4444','#3b82f6','#8b5cf6','#ec4899','#14b8a6'];
 
-function ProjectForm({ initial, onSave, onCancel }) {
+function ProjectForm({ initial, parentName, onSave, onCancel }) {
   const [name, setName] = useState(initial?.name || '');
   const [description, setDescription] = useState(initial?.description || '');
   const [color, setColor] = useState(initial?.color || '#6366f1');
 
   return (
-    <form onSubmit={e => { e.preventDefault(); onSave({ name, description, color }); }} className="project-form">
+    <form onSubmit={e => { e.preventDefault(); onSave({ name, description, color }); }}>
+      {parentName && (
+        <div className="form-hint">Sub-proiect în <strong>{parentName}</strong></div>
+      )}
       <div className="form-group">
-        <label>Nume proiect</label>
+        <label>Nume proiect *</label>
         <input value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Campanie Social Media" required autoFocus />
       </div>
       <div className="form-group">
-        <label>Descriere (opțional)</label>
-        <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Scurtă descriere..." rows={3} />
+        <label>Descriere</label>
+        <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Scurtă descriere..." rows={2} />
       </div>
       <div className="form-group">
         <label>Culoare</label>
@@ -45,38 +48,49 @@ function ProjectCard({ project, subProjects, onDelete, onAddSub }) {
 
   return (
     <div className="project-card">
-      <div className="project-card-header" style={{ borderLeftColor: project.color }}>
-        <div className="project-card-title" onClick={() => navigate(`/projects/${project.id}`)}>
-          <FolderKanban size={18} style={{ color: project.color }} />
-          <span>{project.name}</span>
+      <div className="project-card-bar" style={{ background: project.color }} />
+      <div className="project-card-content">
+        <div className="project-card-header">
+          <div className="project-card-icon" style={{ background: project.color + '22', color: project.color }}>
+            <FolderKanban size={18} />
+          </div>
+          <div className="project-card-info" onClick={() => navigate(`/projects/${project.id}`)}>
+            <div className="project-card-name">{project.name}</div>
+            {project.description && <div className="project-card-desc">{project.description}</div>}
+          </div>
         </div>
-        <div className="project-card-actions">
-          {subProjects.length > 0 && (
-            <button className="btn-icon" onClick={() => setExpanded(e => !e)} title="Sub-proiecte">
-              <ChevronRight size={16} className={expanded ? 'rotated' : ''} />
-              <span className="badge">{subProjects.length}</span>
-            </button>
-          )}
-          <button className="btn-icon" onClick={() => onAddSub(project)} title="Adaugă sub-proiect">
-            <Plus size={16} />
+
+        {subProjects.length > 0 && (
+          <button className="sub-toggle" onClick={() => setExpanded(e => !e)}>
+            <ChevronRight size={14} className={expanded ? 'rotated' : ''} />
+            {subProjects.length} sub-proiect{subProjects.length !== 1 ? 'e' : ''}
           </button>
-          <button className="btn-icon danger" onClick={() => onDelete(project.id)} title="Șterge">
-            <Trash2 size={15} />
+        )}
+
+        {expanded && (
+          <div className="sub-projects">
+            {subProjects.map(sub => (
+              <div key={sub.id} className="sub-project-row" onClick={() => navigate(`/projects/${sub.id}`)}>
+                <span className="sub-dot" style={{ background: sub.color }} />
+                <span>{sub.name}</span>
+                <ArrowRight size={12} className="sub-arrow" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="project-card-footer">
+          <button className="btn-icon" title="Adaugă sub-proiect" onClick={() => onAddSub(project)}>
+            <Plus size={14} />
+          </button>
+          <button className="btn-icon" title="Deschide" onClick={() => navigate(`/projects/${project.id}`)}>
+            <ArrowRight size={14} />
+          </button>
+          <button className="btn-icon danger" title="Șterge" onClick={() => onDelete(project.id)}>
+            <Trash2 size={14} />
           </button>
         </div>
       </div>
-      {project.description && <p className="project-card-desc">{project.description}</p>}
-      {expanded && subProjects.length > 0 && (
-        <div className="sub-projects">
-          {subProjects.map(sub => (
-            <div key={sub.id} className="sub-project-row" onClick={() => navigate(`/projects/${sub.id}`)}
-              style={{ borderLeftColor: sub.color }}>
-              <Folder size={14} style={{ color: sub.color }} />
-              <span>{sub.name}</span>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -84,7 +98,7 @@ function ProjectCard({ project, subProjects, onDelete, onAddSub }) {
 export default function ProjectsPage() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [modal, setModal] = useState(null); // null | { type: 'new' | 'sub', parent?: project }
+  const [modal, setModal] = useState(null);
 
   useEffect(() => {
     api.get('/projects').then(r => { setProjects(r.data); setLoading(false); });
@@ -112,7 +126,10 @@ export default function ProjectsPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <h1 className="page-title"><FolderKanban size={22} /> Proiecte</h1>
+        <div>
+          <h1 className="page-title"><FolderKanban size={22} /> Proiecte</h1>
+          <p className="page-subtitle">{roots.length} proiecte active</p>
+        </div>
         <button className="btn-primary" onClick={() => setModal({ type: 'new' })}>
           <Plus size={16} /> Proiect nou
         </button>
@@ -120,21 +137,21 @@ export default function ProjectsPage() {
 
       {roots.length === 0 ? (
         <div className="empty-state">
-          <FolderKanban size={48} />
+          <FolderKanban size={52} />
           <p>Niciun proiect încă. Creează primul!</p>
         </div>
       ) : (
         <div className="projects-grid">
           {roots.map(p => (
             <ProjectCard key={p.id} project={p} subProjects={subs(p.id)}
-              onDelete={handleDelete} onAddSub={(parent) => setModal({ type: 'sub', parent })} />
+              onDelete={handleDelete} onAddSub={(parent) => setModal({ parent })} />
           ))}
         </div>
       )}
 
       {modal && (
-        <Modal title={modal.parent ? `Sub-proiect în "${modal.parent.name}"` : 'Proiect nou'} onClose={() => setModal(null)}>
-          <ProjectForm onSave={handleCreate} onCancel={() => setModal(null)} />
+        <Modal title={modal.parent ? 'Sub-proiect nou' : 'Proiect nou'} onClose={() => setModal(null)}>
+          <ProjectForm parentName={modal.parent?.name} onSave={handleCreate} onCancel={() => setModal(null)} />
         </Modal>
       )}
     </div>

@@ -94,6 +94,23 @@ export async function initSchema() {
     )
   `;
   await sql`
+    CREATE TABLE IF NOT EXISTS chat_channels (
+      id         SERIAL PRIMARY KEY,
+      name       TEXT NOT NULL UNIQUE,
+      created_by INTEGER NOT NULL REFERENCES users(id),
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS chat_messages (
+      id         SERIAL PRIMARY KEY,
+      channel_id INTEGER NOT NULL REFERENCES chat_channels(id) ON DELETE CASCADE,
+      user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      text       TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+  await sql`
     CREATE TABLE IF NOT EXISTS deals (
       id          SERIAL PRIMARY KEY,
       title       TEXT NOT NULL,

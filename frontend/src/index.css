@@ -355,3 +355,87 @@ th:hover .col-delete { opacity: 1; }
   .stats-grid { grid-template-columns: 1fr; }
   .page-content { padding: 16px; }
 }
+
+/* ── PROJECTS redesign ── */
+.project-card { position: relative; overflow: hidden; padding: 0; }
+.project-card-bar { height: 4px; width: 100%; }
+.project-card-content { padding: 14px 16px; }
+.project-card-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+.project-card-icon { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.project-card-info { flex: 1; min-width: 0; cursor: pointer; }
+.project-card-name { font-size: 14px; font-weight: 700; }
+.project-card-name:hover { color: var(--primary); }
+.project-card-desc { font-size: 12.5px; color: var(--text-2); margin-top: 3px; }
+.project-card-footer { display: flex; gap: 4px; justify-content: flex-end; padding-top: 8px; border-top: 1px solid var(--border); margin-top: 8px; }
+.sub-toggle { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-2); padding: 4px 6px; border-radius: 6px; transition: background .12s; margin-bottom: 6px; }
+.sub-toggle:hover { background: var(--surface-2); }
+.sub-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.sub-arrow { opacity: 0; transition: opacity .15s; }
+.sub-project-row:hover .sub-arrow { opacity: 1; }
+.form-hint { background: var(--primary-light); color: var(--primary); font-size: 12.5px; padding: 8px 12px; border-radius: 7px; margin-bottom: 14px; }
+
+/* ── TEAM ── */
+.team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.team-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow-sm); transition: box-shadow .15s; }
+.team-card:hover { box-shadow: var(--shadow-md); }
+.team-card-me { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
+.team-avatar-wrap { position: relative; flex-shrink: 0; }
+.team-avatar { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; }
+.team-you-badge { position: absolute; bottom: -4px; right: -4px; background: var(--primary); color: #fff; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 10px; }
+.team-info { flex: 1; min-width: 0; }
+.team-name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.team-email { font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.team-role { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 20px; flex-shrink: 0; }
+.team-invite-box { background: var(--surface); border: 1.5px dashed var(--border-2); border-radius: var(--radius); padding: 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.team-invite-text { display: flex; align-items: center; gap: 12px; color: var(--text-2); }
+.team-invite-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.team-invite-sub { font-size: 12.5px; color: var(--text-2); margin-top: 2px; }
+
+/* ── CHAT ── */
+.page-content-chat { padding: 0 !important; overflow: hidden; display: flex; flex-direction: column; }
+.chat-layout { display: flex; height: 100%; overflow: hidden; }
+.chat-sidebar { width: 210px; background: #16162a; border-right: 1px solid rgba(255,255,255,.07); display: flex; flex-direction: column; flex-shrink: 0; }
+.chat-sidebar-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 12px 10px; font-size: 12.5px; font-weight: 700; color: rgba(255,255,255,.5); text-transform: uppercase; letter-spacing: .6px; border-bottom: 1px solid rgba(255,255,255,.07); }
+.chat-sidebar-header .btn-icon { color: rgba(255,255,255,.4); }
+.chat-sidebar-header .btn-icon:hover { background: rgba(255,255,255,.08); color: #fff; }
+.chan-list { flex: 1; overflow-y: auto; padding: 6px 6px; display: flex; flex-direction: column; gap: 1px; }
+.chan-item { display: flex; align-items: center; gap: 7px; padding: 7px 10px; border-radius: 7px; color: rgba(255,255,255,.5); font-size: 13.5px; cursor: pointer; transition: background .12s, color .12s; }
+.chan-item:hover { background: rgba(255,255,255,.06); color: rgba(255,255,255,.8); }
+.chan-item.active { background: rgba(99,102,241,.25); color: #fff; }
+.chan-item span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chan-delete { opacity: 0; color: rgba(255,255,255,.3); padding: 2px; border-radius: 4px; }
+.chan-item.active:hover .chan-delete { opacity: 1; }
+.chan-delete:hover { color: #ef4444; background: rgba(239,68,68,.15); }
+.chan-new { display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: rgba(255,255,255,.05); margin: 4px 6px; border-radius: 7px; }
+.chan-new input { flex: 1; background: none; border: none; color: #fff; font-size: 13px; min-width: 0; }
+.chan-new input::placeholder { color: rgba(255,255,255,.3); }
+.chan-new button { color: rgba(255,255,255,.4); padding: 2px; border-radius: 4px; }
+.chan-new button:hover { color: #fff; background: rgba(255,255,255,.1); }
+.chan-empty { color: rgba(255,255,255,.3); font-size: 12px; text-align: center; padding: 16px 8px; }
+.chat-main { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--surface); }
+.chat-header { display: flex; align-items: center; gap: 8px; padding: 13px 20px; border-bottom: 1px solid var(--border); font-size: 15px; font-weight: 700; color: var(--text); flex-shrink: 0; }
+.chat-header svg { color: var(--text-2); }
+.chat-messages { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 2px; }
+.chat-no-msgs { text-align: center; color: var(--text-3); padding: 40px 0; font-size: 13.5px; }
+.chat-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-3); gap: 12px; }
+.msg { display: flex; gap: 10px; padding: 2px 0; }
+.msg-grouped { padding-top: 1px; }
+.msg-avatar { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+.msg-avatar-gap { width: 34px; flex-shrink: 0; }
+.msg-content { flex: 1; min-width: 0; }
+.msg-meta { display: flex; align-items: baseline; gap: 8px; margin-bottom: 3px; }
+.msg-name { font-size: 13px; font-weight: 700; }
+.msg-time { font-size: 11px; color: var(--text-3); }
+.msg-bubble { font-size: 14px; line-height: 1.5; color: var(--text); word-break: break-word; }
+.msg-me .msg-bubble { color: var(--text); }
+.chat-input-row { display: flex; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--border); flex-shrink: 0; background: var(--surface); }
+.chat-input-row input { flex: 1; border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 14px; font-size: 14px; transition: border-color .15s; background: var(--surface-2); }
+.chat-input-row input:focus { border-color: var(--primary); outline: none; background: var(--surface); }
+.chat-send { width: 40px; height: 40px; background: var(--primary); color: #fff; border-radius: 10px; display: flex; align-items: center; justify-content: center; transition: background .15s, transform .1s; flex-shrink: 0; }
+.chat-send:hover:not(:disabled) { background: var(--primary-dark); }
+.chat-send:active:not(:disabled) { transform: scale(.95); }
+.chat-send:disabled { opacity: .4; cursor: not-allowed; }
+@media (max-width: 768px) {
+  .chat-sidebar { width: 160px; }
+  .team-grid { grid-template-columns: 1fr; }
+}

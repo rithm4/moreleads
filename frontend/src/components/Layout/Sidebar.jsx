@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, TrendingUp, CheckSquare, FileText, FolderKanban, X } from 'lucide-react';
+import { LayoutDashboard, Users, TrendingUp, CheckSquare, FileText, FolderKanban, MessageSquare, X } from 'lucide-react';
 
 const links = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -8,6 +8,8 @@ const links = [
   { to: '/projects',  icon: FolderKanban,     label: 'Proiecte' },
   { to: '/tasks',     icon: CheckSquare,      label: 'Taskuri' },
   { to: '/notes',     icon: FileText,         label: 'Notițe' },
+  { to: '/chat',      icon: MessageSquare,    label: 'Chat' },
+  { to: '/team',      icon: Users,            label: 'Echipă' },
 ];
 
 export function Sidebar({ open, onClose }) {
