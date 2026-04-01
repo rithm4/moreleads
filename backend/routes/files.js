@@ -1,15 +1,11 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
-import { extname, join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-import { createReadStream } from 'fs';
+import { extname, join } from 'path';
 import { unlink } from 'fs/promises';
 import db from '../db/database.js';
 import { authMiddleware } from '../middleware/auth.js';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const UPLOADS_DIR = join(__dirname, '..', 'uploads');
+import { UPLOADS_DIR } from '../db/paths.js';
 
 const storage = multer.diskStorage({
   destination: UPLOADS_DIR,
