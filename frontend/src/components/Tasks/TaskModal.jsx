@@ -2,8 +2,19 @@ import { useState, useEffect } from 'react';
 import { Modal } from '../UI/Modal';
 import api from '../../api/axios';
 
-export function TaskModal({ task, onClose, onSaved }) {
-  const [form, setForm] = useState({ title: '', description: '', assigned_to: '' });
+const STATUSES = [
+  { value: 'todo',       label: 'De făcut',  color: '#6366f1' },
+  { value: 'inprogress', label: 'În lucru',  color: '#f59e0b' },
+  { value: 'done',       label: 'Finalizat', color: '#10b981' },
+];
+
+export function TaskModal({ task, defaultStatus, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    title: '',
+    description: '',
+    assigned_to: '',
+    status: defaultStatus || 'todo',
+  });
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -15,6 +26,7 @@ export function TaskModal({ task, onClose, onSaved }) {
         title: task.title,
         description: task.description || '',
         assigned_to: task.assigned_to || '',
+        status: task.status || 'todo',
       });
     }
   }, [task]);
@@ -28,6 +40,7 @@ export function TaskModal({ task, onClose, onSaved }) {
         title: form.title,
         description: form.description || null,
         assigned_to: form.assigned_to || null,
+        status: form.status,
       };
       if (task) {
         const { data } = await api.put(`/tasks/${task.id}`, payload);
@@ -47,6 +60,7 @@ export function TaskModal({ task, onClose, onSaved }) {
   return (
     <Modal title={task ? 'Editează task' : 'Task nou'} onClose={onClose}>
       <form onSubmit={submit} className="modal-form">
+
         <div className="form-group">
           <label>Titlu *</label>
           <input
@@ -54,17 +68,38 @@ export function TaskModal({ task, onClose, onSaved }) {
             onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
             placeholder="Ce trebuie făcut?"
             required
+            autoFocus
           />
         </div>
+
+        {/* Status selector — pill buttons */}
+        <div className="form-group">
+          <label>Status</label>
+          <div className="status-pills">
+            {STATUSES.map(s => (
+              <button
+                key={s.value}
+                type="button"
+                className={`status-pill ${form.status === s.value ? 'active' : ''}`}
+                style={form.status === s.value ? { background: s.color + '22', color: s.color, borderColor: s.color } : {}}
+                onClick={() => setForm(f => ({ ...f, status: s.value }))}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="form-group">
           <label>Descriere</label>
           <textarea
-            rows={3}
+            rows={2}
             value={form.description}
             onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
             placeholder="Detalii opționale..."
           />
         </div>
+
         <div className="form-group">
           <label>Asignat la</label>
           <select
@@ -77,10 +112,12 @@ export function TaskModal({ task, onClose, onSaved }) {
             ))}
           </select>
         </div>
+
         {error && <div className="form-error">{error}</div>}
-        <div className="form-actions">
+
+        <div className="modal-submit-row">
           <button type="button" className="btn-ghost" onClick={onClose}>Anulează</button>
-          <button type="submit" className="btn-primary" disabled={loading}>
+          <button type="submit" className="btn-primary btn-full" disabled={loading}>
             {loading ? 'Se salvează...' : 'Salvează'}
           </button>
         </div>

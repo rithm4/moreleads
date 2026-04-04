@@ -17,13 +17,15 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { title, description, assigned_to } = req.body;
+  const { title, description, assigned_to, status } = req.body;
   if (!title) return res.status(400).json({ error: 'Titlul este obligatoriu' });
-  const maxPos = await sql`SELECT MAX(position) as m FROM tasks WHERE status = 'todo'`;
+  const validStatus = ['todo', 'inprogress', 'done'];
+  const taskStatus = validStatus.includes(status) ? status : 'todo';
+  const maxPos = await sql`SELECT MAX(position) as m FROM tasks WHERE status = ${taskStatus}`;
   const position = (maxPos[0].m ?? -1) + 1;
   const rows = await sql`
-    INSERT INTO tasks (title, description, assigned_to, created_by, position)
-    VALUES (${title}, ${description || null}, ${assigned_to || null}, ${req.user.id}, ${position})
+    INSERT INTO tasks (title, description, assigned_to, created_by, status, position)
+    VALUES (${title}, ${description || null}, ${assigned_to || null}, ${req.user.id}, ${taskStatus}, ${position})
     RETURNING id
   `;
   const task = await sql`
@@ -35,8 +37,10 @@ router.post('/', async (req, res) => {
 });
 
 router.put('/:id', async (req, res) => {
-  const { title, description, assigned_to } = req.body;
-  await sql`UPDATE tasks SET title=${title}, description=${description || null}, assigned_to=${assigned_to || null}, updated_at=NOW() WHERE id=${req.params.id}`;
+  const { title, description, assigned_to, status } = req.body;
+  const validStatus = ['todo', 'inprogress', 'done'];
+  const taskStatus = validStatus.includes(status) ? status : 'todo';
+  await sql`UPDATE tasks SET title=${title}, description=${description || null}, assigned_to=${assigned_to || null}, status=${taskStatus}, updated_at=NOW() WHERE id=${req.params.id}`;
   const task = await sql`
     SELECT t.*, u.name as assigned_name, c.name as creator_name
     FROM tasks t LEFT JOIN users u ON t.assigned_to = u.id LEFT JOIN users c ON t.created_by = c.id

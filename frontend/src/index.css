@@ -131,6 +131,24 @@ a { text-decoration: none; color: inherit; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
 
+/* Status pills */
+.status-pills { display: flex; gap: 8px; }
+.status-pill {
+  flex: 1; padding: 8px 6px; border-radius: 8px; font-size: 12.5px; font-weight: 600;
+  border: 1.5px solid var(--border); color: var(--text-2); background: var(--surface-2);
+  transition: all .15s; text-align: center;
+}
+.status-pill:hover { border-color: var(--text-2); }
+.status-pill.active { font-weight: 700; }
+
+/* Modal submit row */
+.modal-submit-row {
+  display: flex; gap: 10px; margin-top: 20px;
+  padding-top: 16px; border-top: 1px solid var(--border);
+}
+.modal-submit-row .btn-ghost { flex-shrink: 0; }
+.btn-full { flex: 1; justify-content: center; }
+
 /* ── MODAL ── */
 .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; animation: fadeIn .15s; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -440,8 +458,23 @@ th:hover .col-delete { opacity: 1; }
     max-height: 90vh; max-width: 100%; width: 100%;
     padding-bottom: env(safe-area-inset-bottom);
   }
-  .modal-header { padding: 16px 18px 0; }
-  .modal-body { padding: 14px 18px 20px; }
+  .modal-header { padding: 18px 18px 0; }
+  .modal-header h2 { font-size: 17px; }
+  .modal-body { padding: 14px 16px 16px; }
+
+  /* Bigger tap targets for form inputs on mobile */
+  .form-group input, .form-group select { padding: 11px 13px; font-size: 15px; }
+  .form-group textarea { padding: 10px 13px; font-size: 15px; }
+  .form-group label { font-size: 13px; }
+  .form-group { margin-bottom: 16px; gap: 6px; }
+
+  /* Status pills full width */
+  .status-pills { gap: 6px; }
+  .status-pill { padding: 9px 4px; font-size: 12px; }
+
+  /* Submit row — save button bigger */
+  .modal-submit-row { gap: 8px; margin-top: 16px; padding-top: 14px; }
+  .modal-submit-row .btn-primary { padding: 12px 20px; font-size: 15px; font-weight: 700; }
 
   /* Grids */
   .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
