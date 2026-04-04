@@ -75,35 +75,41 @@ export default function NotesPage() {
         </div>
       ) : (
         <div className="notes-grid">
-          {filtered.map(note => (
-            <div key={note.id} className="note-card">
-              <div className="note-card-header">
-                <h3>{note.title}</h3>
-                <span className={`note-badge ${note.visibility}`}>
-                  {note.visibility === 'public' ? <Globe size={11} /> : <Lock size={11} />}
-                  {note.visibility === 'public' ? 'Publică' : 'Privată'}
-                </span>
+          {filtered.map(note => {
+            const canEdit = note.owner_id === user.id || user.role === 'admin';
+            return (
+              <div key={note.id} className="note-card note-card-clickable" onClick={() => setModal({ note, viewOnly: true })}>
+                <div className="note-card-header">
+                  <h3>{note.title}</h3>
+                  <span className={`note-badge ${note.visibility}`}>
+                    {note.visibility === 'public' ? <Globe size={11} /> : <Lock size={11} />}
+                    {note.visibility === 'public' ? 'Publică' : 'Privată'}
+                  </span>
+                </div>
+                {note.body && <p className="note-body">{note.body}</p>}
+                <div className="note-footer">
+                  <span className="note-meta">{note.owner_name} · {new Date(note.updated_at).toLocaleDateString('ro-RO')}</span>
+                  {canEdit && (
+                    <div className="note-actions">
+                      <button className="btn-icon" onClick={e => { e.stopPropagation(); setModal({ note }); }} title="Editează"><Pencil size={13} /></button>
+                      <button className="btn-icon danger" onClick={e => { e.stopPropagation(); handleDelete(note.id); }} title="Șterge"><Trash2 size={13} /></button>
+                    </div>
+                  )}
+                </div>
               </div>
-              {note.body && <p className="note-body">{note.body}</p>}
-              <div className="note-footer">
-                <span className="note-meta">{note.owner_name} · {new Date(note.updated_at).toLocaleDateString('ro-RO')}</span>
-                {(note.owner_id === user.id || user.role === 'admin') && (
-                  <div className="note-actions">
-                    <button className="btn-icon" onClick={() => setModal({ note })} title="Editează"><Pencil size={13} /></button>
-                    <button className="btn-icon danger" onClick={() => handleDelete(note.id)} title="Șterge"><Trash2 size={13} /></button>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
       {modal !== null && (
         <NoteModal
           note={modal.note}
+          viewOnly={modal.viewOnly}
+          canEdit={modal.note ? (modal.note.owner_id === user.id || user.role === 'admin') : true}
           onClose={() => setModal(null)}
           onSaved={handleSaved}
+          onDelete={handleDelete}
         />
       )}
     </div>

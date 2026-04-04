@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { Pencil, Globe, Lock } from 'lucide-react';
 import { Modal } from '../UI/Modal';
 import api from '../../api/axios';
 
-export function NoteModal({ note, onClose, onSaved }) {
+export function NoteModal({ note, viewOnly: initialViewOnly, onClose, onSaved, onDelete, canEdit }) {
+  const [viewOnly, setViewOnly] = useState(initialViewOnly ?? false);
   const [form, setForm] = useState({
     title: note?.title || '',
     body: note?.body || '',
@@ -31,6 +33,53 @@ export function NoteModal({ note, onClose, onSaved }) {
     }
   };
 
+  if (viewOnly && note) {
+    const isPublic = note.visibility === 'public';
+    return (
+      <Modal title="Notiță" onClose={onClose}>
+        <div className="note-view">
+          <div className="note-view-meta">
+            <span className={`note-badge ${note.visibility}`}>
+              {isPublic ? <Globe size={11} /> : <Lock size={11} />}
+              {isPublic ? 'Publică' : 'Privată'}
+            </span>
+            <span className="note-view-date">
+              {note.owner_name} · {new Date(note.updated_at).toLocaleDateString('ro-RO')}
+            </span>
+          </div>
+
+          <h3 className="note-view-title">{note.title}</h3>
+
+          {note.body ? (
+            <p className="note-view-body">{note.body}</p>
+          ) : (
+            <p className="note-view-empty">Fără conținut.</p>
+          )}
+
+          {canEdit && (
+            <div className="modal-submit-row" style={{ marginTop: '24px' }}>
+              <button
+                type="button"
+                className="btn-ghost btn-danger-ghost"
+                onClick={() => { onDelete(note.id); onClose(); }}
+              >
+                Șterge
+              </button>
+              <button
+                type="button"
+                className="btn-primary btn-full"
+                onClick={() => setViewOnly(false)}
+              >
+                <Pencil size={15} style={{ marginRight: 6 }} />
+                Editează
+              </button>
+            </div>
+          )}
+        </div>
+      </Modal>
+    );
+  }
+
   return (
     <Modal title={note ? 'Editează notiță' : 'Notiță nouă'} onClose={onClose}>
       <form onSubmit={submit} className="modal-form">
@@ -41,6 +90,7 @@ export function NoteModal({ note, onClose, onSaved }) {
             onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
             placeholder="Titlul notiței"
             required
+            autoFocus
           />
         </div>
         <div className="form-group">
@@ -68,9 +118,9 @@ export function NoteModal({ note, onClose, onSaved }) {
           </div>
         </div>
         {error && <div className="form-error">{error}</div>}
-        <div className="form-actions">
+        <div className="modal-submit-row">
           <button type="button" className="btn-ghost" onClick={onClose}>Anulează</button>
-          <button type="submit" className="btn-primary" disabled={loading}>
+          <button type="submit" className="btn-primary btn-full" disabled={loading}>
             {loading ? 'Se salvează...' : 'Salvează'}
           </button>
         </div>
