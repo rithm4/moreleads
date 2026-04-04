@@ -1,17 +1,17 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import { initSchema } from '../server/db.js';
-import authRoutes from '../server/routes/auth.js';
-import usersRoutes from '../server/routes/users.js';
-import tasksRoutes from '../server/routes/tasks.js';
-import notesRoutes from '../server/routes/notes.js';
-import projectsRoutes from '../server/routes/projects.js';
-import contactsRoutes from '../server/routes/contacts.js';
-import dealsRoutes from '../server/routes/deals.js';
-import dashboardRoutes from '../server/routes/dashboard.js';
-import chatRoutes from '../server/routes/chat.js';
-import webhooksRoutes from '../server/routes/webhooks.js';
+import { initSchema } from './_lib/db.js';
+import authRoutes from './_lib/routes/auth.js';
+import usersRoutes from './_lib/routes/users.js';
+import tasksRoutes from './_lib/routes/tasks.js';
+import notesRoutes from './_lib/routes/notes.js';
+import projectsRoutes from './_lib/routes/projects.js';
+import contactsRoutes from './_lib/routes/contacts.js';
+import dealsRoutes from './_lib/routes/deals.js';
+import dashboardRoutes from './_lib/routes/dashboard.js';
+import chatRoutes from './_lib/routes/chat.js';
+import webhooksRoutes from './_lib/routes/webhooks.js';
 
 const app = express();
 
