@@ -141,6 +141,21 @@ a { text-decoration: none; color: inherit; }
 .status-pill:hover { border-color: var(--text-2); }
 .status-pill.active { font-weight: 700; }
 
+/* Task view mode */
+.task-view { padding: 4px 0; }
+.task-view-status { margin-bottom: 12px; }
+.task-view-badge {
+  display: inline-block; padding: 4px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 700; border: 1.5px solid transparent;
+}
+.task-view-title { font-size: 18px; font-weight: 700; color: var(--text); margin: 0 0 12px; line-height: 1.4; }
+.task-view-desc { font-size: 14px; color: var(--text-2); line-height: 1.6; margin: 0 0 16px; white-space: pre-wrap; }
+.task-view-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
+.task-view-label { font-size: 12px; font-weight: 600; color: var(--text-2); min-width: 70px; }
+.task-view-value { font-size: 14px; color: var(--text); font-weight: 500; }
+.btn-danger-ghost { color: #ef4444 !important; }
+.btn-danger-ghost:hover { background: #ef444415 !important; }
+
 /* Modal submit row */
 .modal-submit-row {
   display: flex; gap: 10px; margin-top: 20px;

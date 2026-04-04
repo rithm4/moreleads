@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Pencil } from 'lucide-react';
 import { Modal } from '../UI/Modal';
 import api from '../../api/axios';
 
@@ -8,7 +9,8 @@ const STATUSES = [
   { value: 'done',       label: 'Finalizat', color: '#10b981' },
 ];
 
-export function TaskModal({ task, defaultStatus, onClose, onSaved }) {
+export function TaskModal({ task, defaultStatus, viewOnly: initialViewOnly, onClose, onSaved, onDelete }) {
+  const [viewOnly, setViewOnly] = useState(initialViewOnly ?? false);
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -56,6 +58,59 @@ export function TaskModal({ task, defaultStatus, onClose, onSaved }) {
       setLoading(false);
     }
   };
+
+  const statusMeta = STATUSES.find(s => s.value === (task?.status || form.status));
+  const assignedUser = users.find(u => String(u.id) === String(task?.assigned_to));
+
+  if (viewOnly && task) {
+    return (
+      <Modal title="Detalii task" onClose={onClose}>
+        <div className="task-view">
+          <div className="task-view-status">
+            <span
+              className="task-view-badge"
+              style={{ background: statusMeta?.color + '22', color: statusMeta?.color, borderColor: statusMeta?.color + '55' }}
+            >
+              {statusMeta?.label}
+            </span>
+          </div>
+
+          <h3 className="task-view-title">{task.title}</h3>
+
+          {task.description && (
+            <p className="task-view-desc">{task.description}</p>
+          )}
+
+          {(task.assigned_name || assignedUser) && (
+            <div className="task-view-row">
+              <span className="task-view-label">Asignat</span>
+              <span className="task-view-value">{task.assigned_name || assignedUser?.name}</span>
+            </div>
+          )}
+
+          <div className="modal-submit-row" style={{ marginTop: '24px' }}>
+            {onDelete && (
+              <button
+                type="button"
+                className="btn-ghost btn-danger-ghost"
+                onClick={() => { onDelete(task.id); onClose(); }}
+              >
+                Șterge
+              </button>
+            )}
+            <button
+              type="button"
+              className="btn-primary btn-full"
+              onClick={() => setViewOnly(false)}
+            >
+              <Pencil size={15} style={{ marginRight: 6 }} />
+              Editează
+            </button>
+          </div>
+        </div>
+      </Modal>
+    );
+  }
 
   return (
     <Modal title={task ? 'Editează task' : 'Task nou'} onClose={onClose}>

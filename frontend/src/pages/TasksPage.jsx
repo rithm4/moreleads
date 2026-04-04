@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
-import { CheckSquare, Plus, Pencil, Trash2, ChevronRight } from 'lucide-react';
+import { CheckSquare, Plus, ChevronRight } from 'lucide-react';
 import { KanbanColumn } from '../components/Tasks/KanbanColumn';
 import { TaskModal } from '../components/Tasks/TaskModal';
 import { Spinner } from '../components/UI/Spinner';
@@ -32,9 +32,6 @@ function MobileTaskRow({ task, onEdit, onDelete }) {
         {task.assigned_name && <div className="mobile-task-assign">{task.assigned_name}</div>}
       </div>
       <div className="mobile-task-actions">
-        <button className="btn-icon danger" onClick={e => { e.stopPropagation(); onDelete(task.id); }}>
-          <Trash2 size={15} />
-        </button>
         <ChevronRight size={16} style={{ color: '#94a3b8' }} />
       </div>
     </div>
@@ -144,7 +141,7 @@ export default function TasksPage() {
                     <MobileTaskRow
                       key={task.id}
                       task={task}
-                      onEdit={t => setModal({ task: t })}
+                      onEdit={t => setModal({ task: t, viewOnly: true })}
                       onDelete={handleDelete}
                     />
                   ))}
@@ -159,8 +156,10 @@ export default function TasksPage() {
         <TaskModal
           task={modal.task}
           defaultStatus={modal.defaultStatus}
+          viewOnly={modal.viewOnly}
           onClose={() => setModal(null)}
           onSaved={handleSaved}
+          onDelete={handleDelete}
         />
       )}
     </div>
