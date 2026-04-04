@@ -5,6 +5,7 @@ import { KanbanColumn } from '../components/Tasks/KanbanColumn';
 import { TaskModal } from '../components/Tasks/TaskModal';
 import { Spinner } from '../components/UI/Spinner';
 import api from '../api/axios';
+import { useBadges } from '../context/BadgeContext';
 
 const STATUSES = ['todo', 'inprogress', 'done'];
 const STATUS_META = {
@@ -43,6 +44,9 @@ export default function TasksPage() {
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
   const [activeTab, setActiveTab] = useState('todo');
+  const { markSeen } = useBadges();
+
+  useEffect(() => { markSeen('tasks'); }, [markSeen]);
 
   const fetchTasks = useCallback(async () => {
     const { data } = await api.get('/tasks');

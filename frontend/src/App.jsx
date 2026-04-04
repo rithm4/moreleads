@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { BadgeProvider } from './context/BadgeContext';
 import { ProtectedRoute } from './components/Auth/ProtectedRoute';
 import { Layout } from './components/Layout/Layout';
 import LoginPage from './pages/LoginPage';
@@ -16,6 +17,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <BadgeProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
@@ -30,6 +32,7 @@ export default function App() {
             <Route path="team" element={<TeamPage />} />
           </Route>
         </Routes>
+        </BadgeProvider>
       </AuthProvider>
     </BrowserRouter>
   );

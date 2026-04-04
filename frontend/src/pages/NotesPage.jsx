@@ -4,6 +4,7 @@ import { NoteModal } from '../components/Notes/NoteModal';
 import { Spinner } from '../components/UI/Spinner';
 import { useAuth } from '../hooks/useAuth';
 import api from '../api/axios';
+import { useBadges } from '../context/BadgeContext';
 
 export default function NotesPage() {
   const { user } = useAuth();
@@ -12,6 +13,9 @@ export default function NotesPage() {
   const [filter, setFilter] = useState('all');
   const [modal, setModal] = useState(null);
   const [error, setError] = useState('');
+  const { markSeen } = useBadges();
+
+  useEffect(() => { markSeen('notes'); }, [markSeen]);
 
   const fetchNotes = useCallback(async () => {
     try {
