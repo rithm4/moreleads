@@ -1,12 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
-import { CheckSquare, Plus } from 'lucide-react';
+import { CheckSquare, Plus, Pencil, Trash2, ChevronRight } from 'lucide-react';
 import { KanbanColumn } from '../components/Tasks/KanbanColumn';
 import { TaskModal } from '../components/Tasks/TaskModal';
 import { Spinner } from '../components/UI/Spinner';
 import api from '../api/axios';
 
 const STATUSES = ['todo', 'inprogress', 'done'];
+const STATUS_META = {
+  todo:       { label: 'De făcut',  color: '#6366f1', bg: '#6366f11a' },
+  inprogress: { label: 'În lucru',  color: '#f59e0b', bg: '#f59e0b1a' },
+  done:       { label: 'Finalizat', color: '#10b981', bg: '#10b9811a' },
+};
 
 function groupByStatus(tasks) {
   return STATUSES.reduce((acc, s) => {
@@ -15,10 +20,32 @@ function groupByStatus(tasks) {
   }, {});
 }
 
+// Mobile task row
+function MobileTaskRow({ task, onEdit, onDelete }) {
+  const meta = STATUS_META[task.status];
+  return (
+    <div className="mobile-task-row" onClick={() => onEdit(task)}>
+      <div className="mobile-task-dot" style={{ background: meta.color }} />
+      <div className="mobile-task-body">
+        <div className="mobile-task-title">{task.title}</div>
+        {task.description && <div className="mobile-task-desc">{task.description}</div>}
+        {task.assigned_name && <div className="mobile-task-assign">{task.assigned_name}</div>}
+      </div>
+      <div className="mobile-task-actions">
+        <button className="btn-icon danger" onClick={e => { e.stopPropagation(); onDelete(task.id); }}>
+          <Trash2 size={15} />
+        </button>
+        <ChevronRight size={16} style={{ color: '#94a3b8' }} />
+      </div>
+    </div>
+  );
+}
+
 export default function TasksPage() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
+  const [activeTab, setActiveTab] = useState('todo');
 
   const fetchTasks = useCallback(async () => {
     const { data } = await api.get('/tasks');
@@ -60,7 +87,7 @@ export default function TasksPage() {
           <h1 className="page-title"><CheckSquare size={22} /> Taskuri</h1>
           {total > 0 && <p className="page-subtitle">{done} din {total} finalizate</p>}
         </div>
-        <button className="btn-primary" onClick={() => setModal({})}>
+        <button className="btn-primary" onClick={() => setModal({ defaultStatus: activeTab })}>
           <Plus size={16} /> Task nou
         </button>
       </div>
@@ -68,20 +95,64 @@ export default function TasksPage() {
       {loading ? (
         <div className="page-loading"><Spinner /></div>
       ) : (
-        <DragDropContext onDragEnd={onDragEnd}>
-          <div className="kanban-board">
-            {STATUSES.map(status => (
-              <KanbanColumn
-                key={status}
-                status={status}
-                tasks={columns[status]}
-                onEdit={task => setModal({ task })}
-                onDelete={handleDelete}
-                onAdd={status => setModal({ defaultStatus: status })}
-              />
-            ))}
+        <>
+          {/* DESKTOP: Kanban board */}
+          <DragDropContext onDragEnd={onDragEnd}>
+            <div className="kanban-board tasks-kanban-desktop">
+              {STATUSES.map(status => (
+                <KanbanColumn
+                  key={status}
+                  status={status}
+                  tasks={columns[status]}
+                  onEdit={task => setModal({ task })}
+                  onDelete={handleDelete}
+                  onAdd={s => setModal({ defaultStatus: s })}
+                />
+              ))}
+            </div>
+          </DragDropContext>
+
+          {/* MOBILE: Tab list view */}
+          <div className="tasks-mobile">
+            <div className="tasks-tabs">
+              {STATUSES.map(s => (
+                <button
+                  key={s}
+                  className={`tasks-tab ${activeTab === s ? 'active' : ''}`}
+                  style={activeTab === s ? { borderBottomColor: STATUS_META[s].color, color: STATUS_META[s].color } : {}}
+                  onClick={() => setActiveTab(s)}
+                >
+                  {STATUS_META[s].label}
+                  <span className="tasks-tab-count" style={activeTab === s ? { background: STATUS_META[s].bg, color: STATUS_META[s].color } : {}}>
+                    {columns[s].length}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <div className="tasks-tab-content">
+              {columns[activeTab].length === 0 ? (
+                <div className="mobile-tasks-empty">
+                  <p>Niciun task în această coloană</p>
+                  <button className="btn-primary" onClick={() => setModal({ defaultStatus: activeTab })}>
+                    <Plus size={16} /> Adaugă task
+                  </button>
+                </div>
+              ) : (
+                <div className="mobile-task-list">
+                  {columns[activeTab].map(task => (
+                    <MobileTaskRow
+                      key={task.id}
+                      task={task}
+                      onEdit={t => setModal({ task: t })}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </DragDropContext>
+        </>
       )}
 
       {modal !== null && (

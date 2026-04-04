@@ -7,9 +7,9 @@ const STAGE_LABELS = { lead: 'Lead', contacted: 'Contactat', proposal: 'Propuner
 const STAGE_COLORS = { lead: '#94a3b8', contacted: '#3b82f6', proposal: '#f59e0b', negotiation: '#8b5cf6', won: '#10b981', lost: '#ef4444' };
 const STATUS_COLORS = { prospect: '#f59e0b', activ: '#10b981', inactiv: '#94a3b8' };
 
-function StatCard({ icon: Icon, label, value, color, sub }) {
+function StatCard({ icon: Icon, label, value, color, sub, onClick }) {
   return (
-    <div className="stat-card">
+    <div className="stat-card" onClick={onClick} style={{ cursor: onClick ? 'pointer' : 'default' }}>
       <div className="stat-icon" style={{ background: color + '1a', color }}><Icon size={20} /></div>
       <div className="stat-body">
         <div className="stat-value">{value}</div>
@@ -52,13 +52,13 @@ export default function DashboardPage() {
 
       <div className="stats-grid">
         <StatCard icon={Users} label="Clienți" value={totalContacts}
-          color="#3b82f6" sub={`${activeContacts} activi`} />
+          color="#3b82f6" sub={`${activeContacts} activi`} onClick={() => navigate('/contacts')} />
         <StatCard icon={TrendingUp} label="Deal-uri active" value={openDeals.reduce((s,d)=>s+parseInt(d.count),0)}
-          color="#8b5cf6" sub={`${new Intl.NumberFormat('ro-RO').format(totalDealValue)} RON`} />
+          color="#8b5cf6" sub={`${new Intl.NumberFormat('ro-RO').format(totalDealValue)} RON`} onClick={() => navigate('/pipeline')} />
         <StatCard icon={CheckSquare} label="Taskuri" value={totalTasks}
-          color="#10b981" sub={`${doneTasks} finalizate`} />
+          color="#10b981" sub={`${doneTasks} finalizate`} onClick={() => navigate('/tasks')} />
         <StatCard icon={FolderKanban} label="Proiecte" value={data.projects.count}
-          color="#f59e0b" />
+          color="#f59e0b" onClick={() => navigate('/projects')} />
       </div>
 
       <div className="dash-grid">
