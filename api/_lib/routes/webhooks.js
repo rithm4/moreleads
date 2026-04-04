@@ -9,9 +9,20 @@ router.get('/tilda', (req, res) => {
 });
 
 router.post('/tilda', async (req, res) => {
-  // Tilda verification request: sends test=test on webhook connect
-  // Must respond 200 OK immediately
-  if (req.body && req.body.test === 'test') {
+  // Always respond quickly — Tilda requires 200 within 5 seconds
+  // Parse body regardless of Content-Type
+  let data = {};
+  if (req.body && typeof req.body === 'object') {
+    data = req.body;
+  } else if (typeof req.body === 'string') {
+    // manual URL-decode fallback
+    try {
+      new URLSearchParams(req.body).forEach((v, k) => { data[k] = v; });
+    } catch (_) {}
+  }
+
+  // Tilda verification request: test=test in body or query
+  if (data.test === 'test' || req.query.test === 'test') {
     return res.status(200).send('ok');
   }
 
@@ -20,8 +31,6 @@ router.post('/tilda', async (req, res) => {
   if (secret && req.query.secret !== secret) {
     return res.status(401).send('Unauthorized');
   }
-
-  const data = req.body || {};
 
   // Tilda field names (first letter uppercase by default)
   const name =

@@ -25,6 +25,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.text({ type: '*/*' })); // fallback for non-standard Content-Type
 
 // Init DB schema on cold start
 let initialized = false;
