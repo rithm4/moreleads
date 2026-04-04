@@ -8,6 +8,10 @@ const router = Router();
 // URL: https://moreleads.vercel.app/api/webhooks/tilda
 // Optional secret: add ?secret=YOUR_SECRET and set TILDA_WEBHOOK_SECRET env var
 
+router.get('/tilda', (req, res) => {
+  res.json({ ok: true, message: 'Tilda webhook endpoint is live. Use POST to send leads.' });
+});
+
 router.post('/tilda', async (req, res) => {
   // Optional secret validation
   const secret = process.env.TILDA_WEBHOOK_SECRET;

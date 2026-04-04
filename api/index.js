@@ -24,6 +24,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Init DB schema on cold start
 let initialized = false;
