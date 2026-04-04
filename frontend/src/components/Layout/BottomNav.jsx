@@ -1,12 +1,12 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, TrendingUp, CheckSquare, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Users, TrendingUp, CheckSquare, FolderKanban } from 'lucide-react';
 
 const items = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Home' },
   { to: '/contacts',  icon: Users,           label: 'Clienți' },
   { to: '/pipeline',  icon: TrendingUp,       label: 'Pipeline' },
   { to: '/tasks',     icon: CheckSquare,      label: 'Taskuri' },
-  { to: '/chat',      icon: MessageSquare,    label: 'Chat' },
+  { to: '/projects',  icon: FolderKanban,     label: 'Proiecte' },
 ];
 
 export function BottomNav() {

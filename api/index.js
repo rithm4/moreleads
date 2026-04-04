@@ -10,8 +10,6 @@ import projectsRoutes from './_lib/routes/projects.js';
 import contactsRoutes from './_lib/routes/contacts.js';
 import dealsRoutes from './_lib/routes/deals.js';
 import dashboardRoutes from './_lib/routes/dashboard.js';
-import chatRoutes from './_lib/routes/chat.js';
-import webhooksRoutes from './_lib/routes/webhooks.js';
 
 const app = express();
 
@@ -25,9 +23,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.text({ type: '*/*' })); // fallback for non-standard Content-Type
 
-// Init DB schema on cold start
 let initialized = false;
 app.use(async (req, res, next) => {
   if (!initialized) {
@@ -45,8 +41,6 @@ app.use('/api/projects', projectsRoutes);
 app.use('/api/contacts', contactsRoutes);
 app.use('/api/deals', dealsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/chat', chatRoutes);
-app.use('/api/webhooks', webhooksRoutes);
 
 app.get('/api', (req, res) => res.json({ status: 'Moreleads Hub API ok' }));
 
