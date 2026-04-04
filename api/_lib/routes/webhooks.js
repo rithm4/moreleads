@@ -3,85 +3,84 @@ import sql from '../db.js';
 
 const router = Router();
 
-// Tilda sends form data as POST (JSON or URL-encoded)
-// Configure this URL in Tilda: Settings → Notifications → Webhook URL
-// URL: https://moreleads.vercel.app/api/webhooks/tilda
-// Optional secret: add ?secret=YOUR_SECRET and set TILDA_WEBHOOK_SECRET env var
-
+// GET — health check (Tilda also does GET to verify endpoint)
 router.get('/tilda', (req, res) => {
-  res.json({ ok: true, message: 'Tilda webhook endpoint is live. Use POST to send leads.' });
+  res.status(200).send('ok');
 });
 
 router.post('/tilda', async (req, res) => {
+  // Tilda verification request: sends test=test on webhook connect
+  // Must respond 200 OK immediately
+  if (req.body && req.body.test === 'test') {
+    return res.status(200).send('ok');
+  }
+
   // Optional secret validation
   const secret = process.env.TILDA_WEBHOOK_SECRET;
   if (secret && req.query.secret !== secret) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    return res.status(401).send('Unauthorized');
   }
 
-  const data = req.body;
+  const data = req.body || {};
 
-  // Extract common Tilda form fields (field names vary by form design)
+  // Tilda field names (first letter uppercase by default)
   const name =
-    data.Name || data.name || data.NAME ||
-    data['Nume'] || data['Prenume'] ||
-    [data.fname, data.lname].filter(Boolean).join(' ') ||
+    data.Name || data.name ||
+    [data.Fname, data.Lname].filter(Boolean).join(' ') ||
     'Lead Tilda';
 
-  const email =
-    data.Email || data.email || data.EMAIL || data['E-mail'] || null;
+  const email = data.Email || data.email || null;
+  const phone = data.Phone || data.phone || null;
+  const comment = data.Comment || data.comment || data.Message || data.message || null;
 
-  const phone =
-    data.Phone || data.phone || data.PHONE ||
-    data['Telefon'] || data['Tel'] || null;
+  // Tilda meta: tranid = Lead ID, formid = Block ID
+  const tranid = data.tranid || null;
+  const formid = data.formid || null;
 
-  const comment =
-    data.Comment || data.comment || data.Message || data.message ||
-    data['Mesaj'] || data['Comentariu'] || null;
-
-  // Tilda meta fields
-  const formName =
-    data['tildaspec:formname'] || data.formname || data['Formular'] || '';
-  const pageTitle =
-    data['tildaspec:pagename'] || data.pagename || '';
+  // UTM from COOKIES field (if enabled in Tilda webhook settings)
+  let utmInfo = null;
+  if (data.COOKIES) {
+    try {
+      const decoded = decodeURIComponent(data.COOKIES);
+      const utmMatch = decoded.match(/TILDAUTM=([^;]+)/);
+      if (utmMatch) {
+        utmInfo = decodeURIComponent(utmMatch[1]).replace(/\|\|\|/g, ' | ');
+      }
+    } catch (_) {}
+  }
 
   // Build deal title
   const dealTitle = name !== 'Lead Tilda'
     ? `${name}${phone ? ` • ${phone}` : ''}`
-    : `Lead nou${formName ? ` — ${formName}` : ''}${pageTitle ? ` (${pageTitle})` : ''}`;
+    : `Lead Tilda${tranid ? ` #${tranid}` : ''}`;
 
-  // Build deal notes
+  // Build notes from all fields
   const noteLines = [];
   if (email) noteLines.push(`Email: ${email}`);
   if (phone) noteLines.push(`Telefon: ${phone}`);
-  if (formName) noteLines.push(`Formular: ${formName}`);
-  if (pageTitle) noteLines.push(`Pagina: ${pageTitle}`);
   if (comment) noteLines.push(`Mesaj: ${comment}`);
+  if (tranid) noteLines.push(`Lead ID (Tilda): ${tranid}`);
+  if (formid) noteLines.push(`Form ID: ${formid}`);
+  if (utmInfo) noteLines.push(`UTM: ${utmInfo}`);
 
-  // Add any extra fields from the form
-  const knownKeys = new Set([
-    'Name','name','NAME','Nume','Prenume','fname','lname',
-    'Email','email','EMAIL','E-mail',
-    'Phone','phone','PHONE','Telefon','Tel',
-    'Comment','comment','Message','message','Mesaj','Comentariu',
-    'tildaspec:formname','formname','Formular',
-    'tildaspec:pagename','pagename',
-    'tildaspec:formid','tildaspec:pageid','tildaspec:projectid',
-    'tranid','test'
+  // Any extra custom fields from the form
+  const systemKeys = new Set([
+    'Name','name','Fname','Lname','Email','email',
+    'Phone','phone','Comment','comment','Message','message',
+    'tranid','formid','COOKIES','test'
   ]);
   for (const [key, val] of Object.entries(data)) {
-    if (!knownKeys.has(key) && val && typeof val === 'string') {
-      noteLines.push(`${key}: ${val}`);
+    if (!systemKeys.has(key) && val && typeof val === 'string' && val.trim()) {
+      noteLines.push(`${key}: ${decodeURIComponent(val)}`);
     }
   }
 
   const notes = noteLines.join('\n') || null;
 
   try {
-    // Create contact if we have at least email or phone
+    // Create or find contact
     let contactId = null;
     if (email || phone) {
-      // Check if contact already exists
       let existing = [];
       if (email) {
         existing = await sql`SELECT id FROM contacts WHERE email = ${email} LIMIT 1`;
@@ -102,22 +101,21 @@ router.post('/tilda', async (req, res) => {
       }
     }
 
-    // Get next position in 'lead' stage
+    // Insert deal in 'lead' stage
     const maxPos = await sql`SELECT MAX(position) as m FROM deals WHERE stage='lead'`;
     const position = (maxPos[0].m ?? -1) + 1;
 
-    // Create deal
     const deal = await sql`
       INSERT INTO deals (title, stage, position, contact_id, notes, value)
       VALUES (${dealTitle}, 'lead', ${position}, ${contactId}, ${notes}, 0)
       RETURNING id, title, stage
     `;
 
-    console.log('[Tilda webhook] New lead created:', deal[0].id, dealTitle);
-    res.json({ ok: true, deal: deal[0] });
+    console.log('[Tilda] Lead created:', deal[0].id, dealTitle);
+    res.status(200).send('ok');
   } catch (err) {
-    console.error('[Tilda webhook] Error:', err);
-    res.status(500).json({ error: 'Internal error' });
+    console.error('[Tilda] Error:', err);
+    res.status(500).send('error');
   }
 });
 
