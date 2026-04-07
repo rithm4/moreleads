@@ -602,7 +602,7 @@ th:hover .col-delete { opacity: 1; }
     background: var(--surface);
     border-top: 1px solid var(--border);
     z-index: 200;
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
     box-shadow: 0 -4px 16px rgba(0,0,0,.06);
   }
   .bottom-nav-item {
