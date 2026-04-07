@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
 
-const VAPID_PUBLIC_KEY = 'BK0PGoIi5e3O9qIRryMhFURoznsdDXMb6Qx5UoppHcb2fVjwVMUzNwUZABNulP-VkYp4WAUuebqFG84NqMzuhO0';
+const VAPID_PUBLIC_KEY = 'BPXKAkK9Y1-uKy8FZYh_lGDOGHnGIq_zyUP8yohRtJsjgTPZknRFv7jCKOCxc9yK8vWBX3LaJdYOFbMBeO3SLSI';
 
 function urlBase64ToUint8Array(base64) {
   const padding = '='.repeat((4 - base64.length % 4) % 4);
