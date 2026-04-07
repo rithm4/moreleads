@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { BadgeProvider } from './context/BadgeContext';
@@ -16,6 +17,12 @@ import NotesPage from './pages/NotesPage';
 import TeamPage from './pages/TeamPage';
 
 export default function App() {
+  useEffect(() => {
+    const clearBadge = () => { if ('clearAppBadge' in navigator) navigator.clearAppBadge(); };
+    clearBadge();
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) clearBadge(); });
+  }, []);
+
   return (
     <BrowserRouter>
       <Toaster position="bottom-center" toastOptions={{ duration: 3000, style: { borderRadius: '10px', fontFamily: 'inherit', fontSize: '14px' } }} />

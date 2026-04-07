@@ -6,7 +6,7 @@ const BadgeContext = createContext({ badges: {}, markSeen: () => {}, refresh: ()
 
 export function BadgeProvider({ children }) {
   const { user } = useAuth();
-  const [badges, setBadges] = useState({ tasks: 0, notes: 0 });
+  const [badges, setBadges] = useState({ tasks: 0, notes: 0, notif: 0 });
 
   const refresh = useCallback(async () => {
     if (!user) return;
@@ -38,8 +38,38 @@ export function BadgeProvider({ children }) {
     return () => clearInterval(interval);
   }, [refresh]);
 
+  // Check Cache API for unread push on mount (covers case when app was closed during push)
+  useEffect(() => {
+    if (!('caches' in window)) return;
+    caches.open('push-meta').then(c => c.match('unread')).then(r => {
+      if (r) {
+        setBadges(prev => ({ ...prev, notif: 1 }));
+        if ('setAppBadge' in navigator) navigator.setAppBadge(1).catch(() => {});
+      }
+    });
+  }, []);
+
+  // Listen for push messages from service worker
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+    const handler = (event) => {
+      if (event.data?.type === 'push-received') {
+        setBadges(prev => ({ ...prev, notif: 1 }));
+        // Call setAppBadge from main thread — required on iOS
+        if ('setAppBadge' in navigator) navigator.setAppBadge(1).catch(() => {});
+      }
+    };
+    navigator.serviceWorker.addEventListener('message', handler);
+    return () => navigator.serviceWorker.removeEventListener('message', handler);
+  }, []);
+
   const markSeen = useCallback((section) => {
-    localStorage.setItem(`lastSeen${section.charAt(0).toUpperCase() + section.slice(1)}`, new Date().toISOString());
+    if (section === 'notif') {
+      if ('caches' in window) caches.open('push-meta').then(c => c.delete('unread'));
+      if ('clearAppBadge' in navigator) navigator.clearAppBadge();
+    } else {
+      localStorage.setItem(`lastSeen${section.charAt(0).toUpperCase() + section.slice(1)}`, new Date().toISOString());
+    }
     setBadges(prev => ({ ...prev, [section]: 0 }));
   }, []);
 

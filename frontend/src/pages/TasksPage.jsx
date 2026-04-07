@@ -58,7 +58,7 @@ export default function TasksPage() {
 
   const { refreshing } = usePullToRefresh(fetchTasks);
 
-  useEffect(() => { markSeen('tasks'); }, [markSeen]);
+  useEffect(() => { markSeen('tasks'); markSeen('notif'); }, [markSeen]);
   useEffect(() => {
     setFabAction(() => setModal({ defaultStatus: activeTab }));
     return () => setFabAction(null);
