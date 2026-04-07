@@ -18,6 +18,19 @@ router.delete('/subscribe', async (req, res) => {
   res.json({ ok: true });
 });
 
+// Debug — arată ce chei are serverul configurate
+router.get('/debug', async (req, res) => {
+  const pub = process.env.VAPID_PUBLIC_KEY || '';
+  const priv = process.env.VAPID_PRIVATE_KEY || '';
+  const sub = await sql`SELECT subscription FROM push_subscriptions WHERE user_id = ${req.user.id} LIMIT 1`;
+  res.json({
+    server_pub_key_start: pub.slice(0, 20) + '...',
+    server_pub_key_length: pub.length,
+    server_priv_configured: priv.length > 0,
+    subscription_endpoint: sub[0]?.subscription?.endpoint?.slice(0, 60) + '...' || null,
+  });
+});
+
 // Test endpoint — trimite o notificare de test și returnează eroarea dacă există
 router.post('/test', async (req, res) => {
   const subs = await sql`SELECT id FROM push_subscriptions WHERE user_id = ${req.user.id}`;
