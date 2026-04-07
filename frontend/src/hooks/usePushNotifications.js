@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
 
-const VAPID_PUBLIC_KEY = 'BPXKAkK9Y1-uKy8FZYh_lGDOGHnGIq_zyUP8yohRtJsjgTPZknRFv7jCKOCxc9yK8vWBX3LaJdYOFbMBeO3SLSI';
-
 function urlBase64ToUint8Array(base64) {
   const padding = '='.repeat((4 - base64.length % 4) % 4);
   const b64 = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -30,15 +28,21 @@ export function usePushNotifications() {
       setStatus(permission);
       if (permission !== 'granted') return;
 
+      // Fetch the exact public key the server uses — guaranteed to match
+      const { data } = await api.get('/push/vapid-public-key');
+      const serverKey = data.publicKey;
+      if (!serverKey) { console.error('No VAPID public key from server'); return; }
+
       const existing = await reg.pushManager.getSubscription();
       if (existing) await existing.unsubscribe();
 
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        applicationServerKey: urlBase64ToUint8Array(serverKey),
       });
 
       await api.post('/push/subscribe', sub);
+      setStatus('granted');
     } catch (err) {
       console.error('Push error:', err);
     }
