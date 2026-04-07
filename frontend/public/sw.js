@@ -8,8 +8,8 @@ self.addEventListener('push', event => {
   event.waitUntil((async () => {
     await self.registration.showNotification(data.title || 'Moreleads', {
       body: data.body || '',
-      icon: '/favicon.svg',
-      badge: '/favicon.svg',
+      icon: '/logo.png',
+      badge: '/logo.png',
       vibrate: [200, 100, 200],
       data: { url: data.url || '/tasks' }
     });

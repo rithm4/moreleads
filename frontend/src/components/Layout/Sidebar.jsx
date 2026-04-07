@@ -22,7 +22,7 @@ export function Sidebar({ open, onClose }) {
       <aside className={`sidebar ${open ? 'open' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-logo">
-            <div className="sidebar-logo-icon">⚡</div>
+            <img src="/logo.png" alt="Moreleads" style={{ width: 28, height: 28, borderRadius: 6, objectFit: 'contain', background: '#fff' }} />
             Moreleads Hub
           </div>
           <button className="sidebar-close" onClick={onClose}><X size={18} /></button>
