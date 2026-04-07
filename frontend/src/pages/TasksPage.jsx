@@ -49,6 +49,13 @@ export default function TasksPage() {
   const [activeTab, setActiveTab] = useState('todo');
   const { markSeen } = useBadges();
   const { setFabAction } = useFab();
+
+  const fetchTasks = useCallback(async () => {
+    const { data } = await api.get('/tasks');
+    setTasks(data);
+    setLoading(false);
+  }, []);
+
   const { refreshing } = usePullToRefresh(fetchTasks);
 
   useEffect(() => { markSeen('tasks'); }, [markSeen]);
@@ -56,12 +63,6 @@ export default function TasksPage() {
     setFabAction(() => setModal({ defaultStatus: activeTab }));
     return () => setFabAction(null);
   }, [setFabAction, activeTab]);
-
-  const fetchTasks = useCallback(async () => {
-    const { data } = await api.get('/tasks');
-    setTasks(data);
-    setLoading(false);
-  }, []);
 
   useEffect(() => { fetchTasks(); }, [fetchTasks]);
 
