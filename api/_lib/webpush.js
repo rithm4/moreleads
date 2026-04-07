@@ -1,13 +1,16 @@
 import webpush from 'web-push';
 import sql from './db.js';
 
-webpush.setVapidDetails(
-  'mailto:admin@moreleads.ro',
-  process.env.VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-);
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    'mailto:admin@moreleads.ro',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+}
 
 export async function sendPushToUser(userId, payload) {
+  if (!process.env.VAPID_PUBLIC_KEY) return;
   try {
     const subs = await sql`SELECT id, subscription FROM push_subscriptions WHERE user_id = ${userId}`;
     for (const row of subs) {
