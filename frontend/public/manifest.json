@@ -1,0 +1,18 @@
+{
+  "name": "Moreleads Hub",
+  "short_name": "Moreleads",
+  "description": "CRM și management de proiecte",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#863bff",
+  "background_color": "#0f0f13",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
