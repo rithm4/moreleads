@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, TrendingUp, CheckSquare, FileText, FolderKanban, X } from 'lucide-react';
+import { LayoutDashboard, Users, TrendingUp, CheckSquare, FileText, FolderKanban, X, UserCircle } from 'lucide-react';
 import { useBadges } from '../../context/BadgeContext';
 
 const links = [
@@ -10,6 +10,7 @@ const links = [
   { to: '/tasks',     icon: CheckSquare,      label: 'Taskuri',  badge: 'tasks' },
   { to: '/notes',     icon: FileText,         label: 'Notițe',   badge: 'notes' },
   { to: '/team',      icon: Users,            label: 'Echipă' },
+  { to: '/profile',   icon: UserCircle,       label: 'Profil' },
 ];
 
 export function Sidebar({ open, onClose }) {

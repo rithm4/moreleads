@@ -39,8 +39,8 @@ export function TopBar({ onMenuClick }) {
                 <BellOff size={16} />
               </button>
         )}
-        <div className="topbar-avatar">{initials}</div>
-        <span className="topbar-name">{user?.name}</span>
+        <button className="topbar-avatar" onClick={() => navigate('/profile')} title="Profil">{initials}</button>
+        <span className="topbar-name" style={{ cursor: 'pointer' }} onClick={() => navigate('/profile')}>{user?.name}</span>
         <button className="topbar-logout" onClick={handleLogout} title="Deconectare">
           <LogOut size={16} />
         </button>

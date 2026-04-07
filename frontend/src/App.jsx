@@ -15,9 +15,14 @@ import ProjectDetailPage from './pages/ProjectDetailPage';
 import TasksPage from './pages/TasksPage';
 import NotesPage from './pages/NotesPage';
 import TeamPage from './pages/TeamPage';
+import ProfilePage from './pages/ProfilePage';
 
 export default function App() {
   useEffect(() => {
+    // Apply saved theme
+    const saved = localStorage.getItem('theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+
     const clearBadge = () => { if ('clearAppBadge' in navigator) navigator.clearAppBadge(); };
     clearBadge();
     document.addEventListener('visibilitychange', () => { if (!document.hidden) clearBadge(); });
@@ -41,6 +46,7 @@ export default function App() {
             <Route path="tasks" element={<TasksPage />} />
             <Route path="notes" element={<NotesPage />} />
             <Route path="team" element={<TeamPage />} />
+            <Route path="profile" element={<ProfilePage />} />
           </Route>
         </Routes>
         </BadgeProvider>

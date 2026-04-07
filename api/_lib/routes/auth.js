@@ -35,4 +35,27 @@ router.get('/me', auth, async (req, res) => {
   res.json(rows[0]);
 });
 
+router.put('/profile', auth, async (req, res) => {
+  const { name, email } = req.body;
+  if (!name || !email) return res.status(400).json({ error: 'Numele și emailul sunt obligatorii' });
+  const conflict = await sql`SELECT id FROM users WHERE email = ${email} AND id != ${req.user.id}`;
+  if (conflict.length) return res.status(409).json({ error: 'Email deja folosit de alt cont' });
+  const rows = await sql`UPDATE users SET name=${name}, email=${email} WHERE id=${req.user.id} RETURNING id, name, email, role`;
+  const user = rows[0];
+  const token = jwt.sign({ id: user.id, name: user.name, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+  res.json({ token, user });
+});
+
+router.put('/password', auth, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword) return res.status(400).json({ error: 'Toate câmpurile sunt obligatorii' });
+  if (newPassword.length < 6) return res.status(400).json({ error: 'Parola nouă trebuie să aibă minim 6 caractere' });
+  const rows = await sql`SELECT password FROM users WHERE id = ${req.user.id}`;
+  const ok = await bcrypt.compare(currentPassword, rows[0].password);
+  if (!ok) return res.status(401).json({ error: 'Parola curentă este greșită' });
+  const hash = await bcrypt.hash(newPassword, 10);
+  await sql`UPDATE users SET password=${hash} WHERE id=${req.user.id}`;
+  res.json({ ok: true });
+});
+
 export default router;
