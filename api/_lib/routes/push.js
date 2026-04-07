@@ -25,15 +25,5 @@ router.delete('/subscribe', async (req, res) => {
   res.json({ ok: true });
 });
 
-router.post('/test', async (req, res) => {
-  const subs = await sql`SELECT id FROM push_subscriptions WHERE user_id = ${req.user.id}`;
-  if (subs.length === 0) return res.status(400).json({ error: 'Nu ai nicio subscripție salvată. Apasă pe clopoțel mai întâi.' });
-  const results = await sendPushToUser(req.user.id, {
-    title: 'Test notificare',
-    body: 'Dacă vezi asta, push notifications funcționează!',
-    url: '/dashboard'
-  });
-  res.json({ results });
-});
 
 export default router;
