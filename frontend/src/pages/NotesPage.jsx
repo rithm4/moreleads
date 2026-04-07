@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Pencil, Trash2, Lock, Globe, FileText } from 'lucide-react';
 import { NoteModal } from '../components/Notes/NoteModal';
-import { Spinner } from '../components/UI/Spinner';
+import { SkeletonCard } from '../components/UI/Skeleton';
 import { useAuth } from '../hooks/useAuth';
 import api from '../api/axios';
 import { useBadges } from '../context/BadgeContext';
+import { useFab } from '../context/FabContext';
+import { t } from '../utils/toast';
 
 export default function NotesPage() {
   const { user } = useAuth();
@@ -14,8 +16,13 @@ export default function NotesPage() {
   const [modal, setModal] = useState(null);
   const [error, setError] = useState('');
   const { markSeen } = useBadges();
+  const { setFabAction } = useFab();
 
   useEffect(() => { markSeen('notes'); }, [markSeen]);
+  useEffect(() => {
+    setFabAction(() => setModal({}));
+    return () => setFabAction(null);
+  }, [setFabAction]);
 
   const fetchNotes = useCallback(async () => {
     try {
@@ -31,14 +38,17 @@ export default function NotesPage() {
   useEffect(() => { fetchNotes(); }, [fetchNotes]);
 
   const handleSaved = (note, action) => {
-    if (action === 'create') setNotes(prev => [note, ...prev]);
-    else setNotes(prev => prev.map(n => n.id === note.id ? note : n));
+    if (action === 'create') { setNotes(prev => [note, ...prev]); t.saved('Notiță adăugată!'); }
+    else { setNotes(prev => prev.map(n => n.id === note.id ? note : n)); t.saved('Notiță actualizată!'); }
   };
 
   const handleDelete = async id => {
     if (!window.confirm('Ștergi această notiță?')) return;
-    await api.delete(`/notes/${id}`);
-    setNotes(prev => prev.filter(n => n.id !== id));
+    try {
+      await api.delete(`/notes/${id}`);
+      setNotes(prev => prev.filter(n => n.id !== id));
+      t.deleted('Notiță ștearsă!');
+    } catch { t.error(); }
   };
 
   const filtered = notes.filter(n => {
@@ -71,7 +81,7 @@ export default function NotesPage() {
       {error && <div className="page-error">{error}</div>}
 
       {loading ? (
-        <div className="loading-center"><Spinner /></div>
+        <div className="skeleton-grid">{Array.from({length:6}).map((_,i)=><SkeletonCard key={i} lines={3}/>)}</div>
       ) : filtered.length === 0 ? (
         <div className="empty-state">
           <p>Nicio notiță găsită.</p>

@@ -1,13 +1,79 @@
-import { useState, useEffect } from 'react';
-import { Pencil } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Pencil, Calendar, Send, Trash2 } from 'lucide-react';
 import { Modal } from '../UI/Modal';
 import api from '../../api/axios';
+import { useAuth } from '../../hooks/useAuth';
 
 const STATUSES = [
   { value: 'todo',       label: 'De făcut',  color: '#6366f1' },
   { value: 'inprogress', label: 'În lucru',  color: '#f59e0b' },
   { value: 'done',       label: 'Finalizat', color: '#10b981' },
 ];
+
+function CommentsSection({ taskId }) {
+  const { user } = useAuth();
+  const [comments, setComments] = useState([]);
+  const [text, setText] = useState('');
+  const [sending, setSending] = useState(false);
+  const bottomRef = useRef(null);
+
+  useEffect(() => {
+    api.get(`/comments/${taskId}`).then(r => setComments(r.data));
+  }, [taskId]);
+
+  const send = async e => {
+    e.preventDefault();
+    if (!text.trim()) return;
+    setSending(true);
+    try {
+      const { data } = await api.post(`/comments/${taskId}`, { text });
+      setComments(prev => [...prev, data]);
+      setText('');
+      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+    } finally { setSending(false); }
+  };
+
+  const remove = async (id) => {
+    await api.delete(`/comments/${id}`);
+    setComments(prev => prev.filter(c => c.id !== id));
+  };
+
+  return (
+    <div className="comments-section">
+      <div className="comments-title">Comentarii ({comments.length})</div>
+      <div className="comments-list">
+        {comments.length === 0 && <div className="comments-empty">Niciun comentariu.</div>}
+        {comments.map(c => (
+          <div key={c.id} className="comment-row">
+            <div className="comment-avatar">{c.user_name?.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}</div>
+            <div className="comment-body">
+              <div className="comment-meta">
+                <span className="comment-user">{c.user_name}</span>
+                <span className="comment-time">{new Date(c.created_at).toLocaleString('ro-RO', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}</span>
+              </div>
+              <div className="comment-text">{c.text}</div>
+            </div>
+            {(c.user_id === user?.id) && (
+              <button className="btn-icon danger comment-del" onClick={() => remove(c.id)}><Trash2 size={12} /></button>
+            )}
+          </div>
+        ))}
+        <div ref={bottomRef} />
+      </div>
+      <form onSubmit={send} className="comment-form">
+        <input
+          value={text}
+          onChange={e => setText(e.target.value)}
+          placeholder="Scrie un comentariu..."
+          className="comment-input"
+        />
+        <button type="submit" className="btn-primary comment-send" disabled={sending || !text.trim()}>
+          <Send size={14} />
+        </button>
+      </form>
+    </div>
+  );
+}
 
 export function TaskModal({ task, defaultStatus, viewOnly: initialViewOnly, onClose, onSaved, onDelete }) {
   const [viewOnly, setViewOnly] = useState(initialViewOnly ?? false);
@@ -16,6 +82,7 @@ export function TaskModal({ task, defaultStatus, viewOnly: initialViewOnly, onCl
     description: '',
     assigned_to: '',
     status: defaultStatus || 'todo',
+    due_date: '',
   });
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -29,6 +96,7 @@ export function TaskModal({ task, defaultStatus, viewOnly: initialViewOnly, onCl
         description: task.description || '',
         assigned_to: task.assigned_to || '',
         status: task.status || 'todo',
+        due_date: task.due_date ? task.due_date.slice(0, 10) : '',
       });
     }
   }, [task]);
@@ -43,6 +111,7 @@ export function TaskModal({ task, defaultStatus, viewOnly: initialViewOnly, onCl
         description: form.description || null,
         assigned_to: form.assigned_to || null,
         status: form.status,
+        due_date: form.due_date || null,
       };
       if (task) {
         const { data } = await api.put(`/tasks/${task.id}`, payload);
@@ -81,6 +150,15 @@ export function TaskModal({ task, defaultStatus, viewOnly: initialViewOnly, onCl
             <p className="task-view-desc">{task.description}</p>
           )}
 
+          {task.due_date && (
+            <div className="task-view-row">
+              <span className="task-view-label"><Calendar size={13} style={{marginRight:4}}/>Termen</span>
+              <span className="task-view-value" style={{ color: new Date(task.due_date) < new Date() && task.status !== 'done' ? '#ef4444' : undefined }}>
+                {new Date(task.due_date).toLocaleDateString('ro-RO')}
+                {new Date(task.due_date) < new Date() && task.status !== 'done' && ' — Întârziat!'}
+              </span>
+            </div>
+          )}
           {(task.assigned_name || assignedUser) && (
             <div className="task-view-row">
               <span className="task-view-label">Asignat</span>
@@ -107,6 +185,8 @@ export function TaskModal({ task, defaultStatus, viewOnly: initialViewOnly, onCl
               Editează
             </button>
           </div>
+
+          <CommentsSection taskId={task.id} />
         </div>
       </Modal>
     );
@@ -155,17 +235,27 @@ export function TaskModal({ task, defaultStatus, viewOnly: initialViewOnly, onCl
           />
         </div>
 
-        <div className="form-group">
-          <label>Asignat la</label>
-          <select
-            value={form.assigned_to}
-            onChange={e => setForm(f => ({ ...f, assigned_to: e.target.value }))}
-          >
-            <option value="">— Nealocat —</option>
-            {users.map(u => (
-              <option key={u.id} value={u.id}>{u.name}</option>
-            ))}
-          </select>
+        <div className="form-row">
+          <div className="form-group">
+            <label>Termen limită</label>
+            <input
+              type="date"
+              value={form.due_date}
+              onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))}
+            />
+          </div>
+          <div className="form-group">
+            <label>Asignat la</label>
+            <select
+              value={form.assigned_to}
+              onChange={e => setForm(f => ({ ...f, assigned_to: e.target.value }))}
+            >
+              <option value="">— Nealocat —</option>
+              {users.map(u => (
+                <option key={u.id} value={u.id}>{u.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {error && <div className="form-error">{error}</div>}

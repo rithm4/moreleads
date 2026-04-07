@@ -26,7 +26,25 @@ router.get('/', auth, async (req, res) => {
     ORDER BY t.created_at DESC LIMIT 5
   `;
 
-  res.json({ contacts, deals, tasks, notes: notes[0], projects: projects[0], recentDeals, recentTasks });
+  // My tasks (assigned to current user, not done)
+  const myTasks = await sql`
+    SELECT t.*, u.name as assigned_name FROM tasks t
+    LEFT JOIN users u ON u.id = t.assigned_to
+    WHERE t.assigned_to = ${req.user.id} AND t.status != 'done'
+    ORDER BY t.due_date ASC NULLS LAST, t.created_at DESC
+    LIMIT 8
+  `;
+
+  // Deal trend — deals created in last 30 days grouped by day
+  const dealTrend = await sql`
+    SELECT DATE(created_at) as day, COUNT(*) as count, COALESCE(SUM(value),0) as value
+    FROM deals
+    WHERE created_at >= NOW() - INTERVAL '30 days'
+    GROUP BY DATE(created_at)
+    ORDER BY day ASC
+  `;
+
+  res.json({ contacts, deals, tasks, notes: notes[0], projects: projects[0], recentDeals, recentTasks, myTasks, dealTrend });
 });
 
 export default router;

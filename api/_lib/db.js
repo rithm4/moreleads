@@ -22,12 +22,14 @@ export async function initSchema() {
       description TEXT,
       status      TEXT NOT NULL DEFAULT 'todo',
       position    INTEGER NOT NULL DEFAULT 0,
+      due_date    DATE,
       assigned_to INTEGER REFERENCES users(id) ON DELETE SET NULL,
       created_by  INTEGER NOT NULL REFERENCES users(id),
       created_at  TIMESTAMPTZ DEFAULT NOW(),
       updated_at  TIMESTAMPTZ DEFAULT NOW()
     )
   `;
+  await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS due_date DATE`;
   await sql`
     CREATE TABLE IF NOT EXISTS notes (
       id         SERIAL PRIMARY KEY,
@@ -91,6 +93,26 @@ export async function initSchema() {
       created_by INTEGER NOT NULL REFERENCES users(id),
       created_at TIMESTAMPTZ DEFAULT NOW(),
       updated_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS task_comments (
+      id         SERIAL PRIMARY KEY,
+      task_id    INTEGER NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+      user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      text       TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS activity_log (
+      id         SERIAL PRIMARY KEY,
+      user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      action     TEXT NOT NULL,
+      entity     TEXT NOT NULL,
+      entity_id  INTEGER,
+      details    TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `;
   await sql`

@@ -14,6 +14,12 @@ router.get('/', async (req, res) => {
   res.json(rows);
 });
 
+router.get('/:id', async (req, res) => {
+  const rows = await sql`SELECT * FROM contacts WHERE id=${req.params.id}`;
+  if (!rows.length) return res.status(404).json({ error: 'Contactul nu există' });
+  res.json(rows[0]);
+});
+
 router.post('/', async (req, res) => {
   const { name, company, email, phone, website, status, notes } = req.body;
   if (!name) return res.status(400).json({ error: 'Numele este obligatoriu' });

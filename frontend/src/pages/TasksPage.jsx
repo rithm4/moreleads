@@ -3,9 +3,12 @@ import { DragDropContext } from '@hello-pangea/dnd';
 import { CheckSquare, Plus, ChevronRight } from 'lucide-react';
 import { KanbanColumn } from '../components/Tasks/KanbanColumn';
 import { TaskModal } from '../components/Tasks/TaskModal';
-import { Spinner } from '../components/UI/Spinner';
+import { SkeletonCard } from '../components/UI/Skeleton';
 import api from '../api/axios';
 import { useBadges } from '../context/BadgeContext';
+import { useFab } from '../context/FabContext';
+import { t } from '../utils/toast';
+import { usePullToRefresh } from '../hooks/usePullToRefresh';
 
 const STATUSES = ['todo', 'inprogress', 'done'];
 const STATUS_META = {
@@ -45,8 +48,14 @@ export default function TasksPage() {
   const [modal, setModal] = useState(null);
   const [activeTab, setActiveTab] = useState('todo');
   const { markSeen } = useBadges();
+  const { setFabAction } = useFab();
+  const { refreshing } = usePullToRefresh(fetchTasks);
 
   useEffect(() => { markSeen('tasks'); }, [markSeen]);
+  useEffect(() => {
+    setFabAction(() => setModal({ defaultStatus: activeTab }));
+    return () => setFabAction(null);
+  }, [setFabAction, activeTab]);
 
   const fetchTasks = useCallback(async () => {
     const { data } = await api.get('/tasks');
@@ -69,12 +78,16 @@ export default function TasksPage() {
 
   const handleSaved = (task, action) => {
     setTasks(prev => action === 'create' ? [...prev, task] : prev.map(t => t.id === task.id ? task : t));
+    t.saved(action === 'create' ? 'Task adăugat!' : 'Task actualizat!');
   };
 
   const handleDelete = async id => {
     if (!confirm('Ștergi acest task?')) return;
-    await api.delete(`/tasks/${id}`);
-    setTasks(prev => prev.filter(t => t.id !== id));
+    try {
+      await api.delete(`/tasks/${id}`);
+      setTasks(prev => prev.filter(t => t.id !== id));
+      t.deleted('Task șters!');
+    } catch { t.error(); }
   };
 
   const columns = groupByStatus(tasks);
@@ -83,6 +96,7 @@ export default function TasksPage() {
 
   return (
     <div className="page page-wide">
+      {refreshing && <div className="pull-refresh-indicator">Se actualizează...</div>}
       <div className="page-header">
         <div>
           <h1 className="page-title"><CheckSquare size={22} /> Taskuri</h1>
@@ -94,7 +108,7 @@ export default function TasksPage() {
       </div>
 
       {loading ? (
-        <div className="page-loading"><Spinner /></div>
+        <div className="skeleton-grid">{Array.from({length:6}).map((_,i)=><SkeletonCard key={i} lines={3}/>)}</div>
       ) : (
         <>
           {/* DESKTOP: Kanban board */}

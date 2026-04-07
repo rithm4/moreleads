@@ -1,5 +1,5 @@
 import { Draggable } from '@hello-pangea/dnd';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Calendar } from 'lucide-react';
 
 export function TaskCard({ task, index, onEdit, onDelete }) {
   const initials = task.assigned_name
@@ -17,6 +17,15 @@ export function TaskCard({ task, index, onEdit, onDelete }) {
         >
           <div className="task-card-title">{task.title}</div>
           {task.description && <div className="task-card-desc">{task.description}</div>}
+          {task.due_date && (() => {
+            const overdue = new Date(task.due_date) < new Date() && task.status !== 'done';
+            return (
+              <div className="task-card-due" style={{ color: overdue ? '#ef4444' : '#94a3b8' }}>
+                <Calendar size={11} />{new Date(task.due_date).toLocaleDateString('ro-RO')}
+                {overdue && ' ⚠️'}
+              </div>
+            );
+          })()}
           <div className="task-card-footer">
             {initials ? (
               <div className="task-assignee">

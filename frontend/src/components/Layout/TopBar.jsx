@@ -1,6 +1,7 @@
 import { Menu, LogOut } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { GlobalSearch } from './GlobalSearch';
 
 export function TopBar({ onMenuClick }) {
   const { user, logout } = useAuth();
@@ -21,6 +22,7 @@ export function TopBar({ onMenuClick }) {
         <Menu size={20} />
       </button>
       <div className="topbar-right">
+        <GlobalSearch />
         <div className="topbar-avatar">{initials}</div>
         <span className="topbar-name">{user?.name}</span>
         <button className="topbar-logout" onClick={handleLogout} title="Deconectare">

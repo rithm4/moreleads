@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Users, Plus, Search, Pencil, Trash2, Phone, Mail, Globe, Building2 } from 'lucide-react';
 import api from '../api/axios';
 import { Modal } from '../components/UI/Modal';
-import { Spinner } from '../components/UI/Spinner';
+import { SkeletonCard } from '../components/UI/Skeleton';
+import { t } from '../utils/toast';
+import { useFab } from '../context/FabContext';
 
 const STATUSES = ['prospect', 'activ', 'inactiv'];
 const STATUS_LABEL = { prospect: 'Prospect', activ: 'Activ', inactiv: 'Inactiv' };
@@ -61,10 +64,10 @@ function ContactForm({ initial, onSave, onCancel }) {
   );
 }
 
-function ContactCard({ contact, onEdit, onDelete }) {
+function ContactCard({ contact, onEdit, onDelete, onView }) {
   const initials = contact.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   return (
-    <div className="contact-card">
+    <div className="contact-card" onClick={onView} style={{ cursor: 'pointer' }}>
       <div className="contact-card-top">
         <div className="contact-avatar" style={{ background: STATUS_COLOR[contact.status] + '22', color: STATUS_COLOR[contact.status] }}>
           {initials}
@@ -84,23 +87,30 @@ function ContactCard({ contact, onEdit, onDelete }) {
       </div>
       {contact.notes && <p className="contact-notes">{contact.notes}</p>}
       <div className="contact-actions">
-        <button className="btn-icon" onClick={() => onEdit(contact)}><Pencil size={14} /></button>
-        <button className="btn-icon danger" onClick={() => onDelete(contact.id)}><Trash2 size={14} /></button>
+        <button className="btn-icon" onClick={e => { e.stopPropagation(); onEdit(contact); }}><Pencil size={14} /></button>
+        <button className="btn-icon danger" onClick={e => { e.stopPropagation(); onDelete(contact.id); }}><Trash2 size={14} /></button>
       </div>
     </div>
   );
 }
 
 export default function ContactsPage() {
+  const navigate = useNavigate();
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [modal, setModal] = useState(null);
+  const { setFabAction } = useFab();
 
   useEffect(() => {
     api.get('/contacts').then(r => { setContacts(r.data); setLoading(false); });
   }, []);
+
+  useEffect(() => {
+    setFabAction(() => setModal({ contact: null }));
+    return () => setFabAction(null);
+  }, [setFabAction]);
 
   const filtered = contacts.filter(c => {
     const q = search.toLowerCase();
@@ -110,23 +120,35 @@ export default function ContactsPage() {
   });
 
   const handleSave = async (form) => {
-    if (modal?.contact) {
-      const res = await api.put(`/contacts/${modal.contact.id}`, form);
-      setContacts(prev => prev.map(c => c.id === modal.contact.id ? res.data : c));
-    } else {
-      const res = await api.post('/contacts', form);
-      setContacts(prev => [res.data, ...prev]);
-    }
-    setModal(null);
+    try {
+      if (modal?.contact) {
+        const res = await api.put(`/contacts/${modal.contact.id}`, form);
+        setContacts(prev => prev.map(c => c.id === modal.contact.id ? res.data : c));
+        t.saved('Contact actualizat!');
+      } else {
+        const res = await api.post('/contacts', form);
+        setContacts(prev => [res.data, ...prev]);
+        t.saved('Contact adăugat!');
+      }
+      setModal(null);
+    } catch { t.error(); }
   };
 
   const handleDelete = async (id) => {
     if (!confirm('Ștergi contactul?')) return;
-    await api.delete(`/contacts/${id}`);
-    setContacts(prev => prev.filter(c => c.id !== id));
+    try {
+      await api.delete(`/contacts/${id}`);
+      setContacts(prev => prev.filter(c => c.id !== id));
+      t.deleted('Contact șters!');
+    } catch { t.error(); }
   };
 
-  if (loading) return <div className="page-loading"><Spinner /></div>;
+  if (loading) return (
+    <div className="page">
+      <div className="page-header"><div className="skeleton" style={{width:180,height:28,borderRadius:8}} /></div>
+      <div className="skeleton-grid">{Array.from({length:6}).map((_,i)=><SkeletonCard key={i} lines={4}/>)}</div>
+    </div>
+  );
 
   return (
     <div className="page">
@@ -163,6 +185,7 @@ export default function ContactsPage() {
         <div className="contacts-grid">
           {filtered.map(c => (
             <ContactCard key={c.id} contact={c}
+              onView={() => navigate(`/contacts/${c.id}`)}
               onEdit={contact => setModal({ contact })}
               onDelete={handleDelete} />
           ))}

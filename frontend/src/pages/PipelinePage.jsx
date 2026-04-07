@@ -3,7 +3,8 @@ import { Plus, Trash2, Pencil, TrendingUp, User, X } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import api from '../api/axios';
 import { Modal } from '../components/UI/Modal';
-import { Spinner } from '../components/UI/Spinner';
+import { SkeletonCard } from '../components/UI/Skeleton';
+import { t } from '../utils/toast';
 
 const STAGES = [
   { id: 'lead',        label: 'Lead',       color: '#94a3b8' },
@@ -128,23 +129,36 @@ export default function PipelinePage() {
 
   const handleSave = async (form) => {
     const payload = { ...form, value: parseFloat(form.value) || 0, contact_id: form.contact_id || null, assigned_to: form.assigned_to || null };
-    if (modal?.deal) {
-      const res = await api.put(`/deals/${modal.deal.id}`, payload);
-      setDeals(prev => prev.map(d => d.id === modal.deal.id ? res.data : d));
-    } else {
-      const res = await api.post('/deals', payload);
-      setDeals(prev => [...prev, res.data]);
-    }
-    setModal(null);
+    try {
+      if (modal?.deal?.id) {
+        const res = await api.put(`/deals/${modal.deal.id}`, payload);
+        setDeals(prev => prev.map(d => d.id === modal.deal.id ? res.data : d));
+        t.saved('Deal actualizat!');
+      } else {
+        const res = await api.post('/deals', payload);
+        setDeals(prev => [...prev, res.data]);
+        t.saved('Deal adăugat!');
+      }
+      setModal(null);
+    } catch { t.error(); }
   };
 
   const handleDelete = async (id) => {
     if (!confirm('Ștergi deal-ul?')) return;
-    await api.delete(`/deals/${id}`);
-    setDeals(prev => prev.filter(d => d.id !== id));
+    try {
+      await api.delete(`/deals/${id}`);
+      setDeals(prev => prev.filter(d => d.id !== id));
+      t.deleted('Deal șters!');
+    } catch { t.error(); }
   };
 
-  if (loading) return <div className="page-loading"><Spinner /></div>;
+  if (loading) return (
+    <div className="page page-wide">
+      <div className="skeleton-grid" style={{gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))'}}>
+        {Array.from({length:6}).map((_,i)=><SkeletonCard key={i} lines={4}/>)}
+      </div>
+    </div>
+  );
 
   const totalOpen = deals.filter(d => !['won','lost'].includes(d.stage)).reduce((s,d) => s + parseFloat(d.value||0), 0);
 

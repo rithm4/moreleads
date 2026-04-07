@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { BadgeProvider } from './context/BadgeContext';
 import { ProtectedRoute } from './components/Auth/ProtectedRoute';
@@ -6,6 +7,7 @@ import { Layout } from './components/Layout/Layout';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import ContactsPage from './pages/ContactsPage';
+import ContactDetailPage from './pages/ContactDetailPage';
 import PipelinePage from './pages/PipelinePage';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
@@ -16,6 +18,7 @@ import TeamPage from './pages/TeamPage';
 export default function App() {
   return (
     <BrowserRouter>
+      <Toaster position="bottom-center" toastOptions={{ duration: 3000, style: { borderRadius: '10px', fontFamily: 'inherit', fontSize: '14px' } }} />
       <AuthProvider>
         <BadgeProvider>
         <Routes>
@@ -24,6 +27,7 @@ export default function App() {
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="contacts" element={<ContactsPage />} />
+            <Route path="contacts/:id" element={<ContactDetailPage />} />
             <Route path="pipeline" element={<PipelinePage />} />
             <Route path="projects" element={<ProjectsPage />} />
             <Route path="projects/:id" element={<ProjectDetailPage />} />
