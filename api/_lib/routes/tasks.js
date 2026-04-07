@@ -37,7 +37,7 @@ router.post('/', async (req, res) => {
   `;
   logActivity(req.user.id, 'created', 'task', task[0].id, task[0].title);
   if (assigned_to && Number(assigned_to) !== req.user.id) {
-    sendPushToUser(Number(assigned_to), {
+    await sendPushToUser(Number(assigned_to), {
       title: 'Task nou asignat',
       body: `"${title}" a fost asignat ție de ${req.user.name}`,
       url: '/tasks'
@@ -64,7 +64,7 @@ router.put('/:id', async (req, res) => {
   `;
   const prevAssigned = prev[0]?.assigned_to;
   if (assigned_to && Number(assigned_to) !== req.user.id && Number(assigned_to) !== prevAssigned) {
-    sendPushToUser(Number(assigned_to), {
+    await sendPushToUser(Number(assigned_to), {
       title: 'Task asignat ție',
       body: `"${title}" a fost asignat ție de ${req.user.name}`,
       url: '/tasks'
