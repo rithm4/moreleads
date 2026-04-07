@@ -1,12 +1,14 @@
 import webpush from 'web-push';
 import sql from './db.js';
 
-if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
-  webpush.setVapidDetails(
-    'mailto:admin@moreleads.ro',
-    process.env.VAPID_PUBLIC_KEY,
-    process.env.VAPID_PRIVATE_KEY
-  );
+const VAPID_PUBLIC  = (process.env.VAPID_PUBLIC_KEY  || '').replace(/[=\s]/g, '');
+const VAPID_PRIVATE = (process.env.VAPID_PRIVATE_KEY || '').replace(/[=\s]/g, '');
+if (VAPID_PUBLIC && VAPID_PRIVATE) {
+  try {
+    webpush.setVapidDetails('mailto:admin@moreleads.ro', VAPID_PUBLIC, VAPID_PRIVATE);
+  } catch (e) {
+    console.error('VAPID setup error:', e.message);
+  }
 }
 
 export async function sendPushToUser(userId, payload) {
