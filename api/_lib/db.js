@@ -133,6 +133,14 @@ export async function initSchema() {
     )
   `;
   await sql`
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+      id         SERIAL PRIMARY KEY,
+      user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      subscription JSONB NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+  await sql`
     CREATE TABLE IF NOT EXISTS deals (
       id          SERIAL PRIMARY KEY,
       title       TEXT NOT NULL,

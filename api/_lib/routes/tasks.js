@@ -2,6 +2,7 @@ import { Router } from 'express';
 import sql from '../db.js';
 import { auth } from '../middleware.js';
 import { logActivity } from '../logActivity.js';
+import { sendPushToUser } from '../webpush.js';
 
 const router = Router();
 router.use(auth);
@@ -35,6 +36,13 @@ router.post('/', async (req, res) => {
     WHERE t.id = ${rows[0].id}
   `;
   logActivity(req.user.id, 'created', 'task', task[0].id, task[0].title);
+  if (assigned_to && Number(assigned_to) !== req.user.id) {
+    sendPushToUser(Number(assigned_to), {
+      title: 'Task nou asignat',
+      body: `"${title}" a fost asignat ție de ${req.user.name}`,
+      url: '/tasks'
+    });
+  }
   res.json(task[0]);
 });
 
@@ -42,6 +50,7 @@ router.put('/:id', async (req, res) => {
   const { title, description, assigned_to, status, due_date } = req.body;
   const validStatus = ['todo', 'inprogress', 'done'];
   const taskStatus = validStatus.includes(status) ? status : 'todo';
+  const prev = await sql`SELECT assigned_to FROM tasks WHERE id = ${req.params.id}`;
   await sql`
     UPDATE tasks SET title=${title}, description=${description || null},
     assigned_to=${assigned_to || null}, status=${taskStatus},
@@ -53,6 +62,14 @@ router.put('/:id', async (req, res) => {
     FROM tasks t LEFT JOIN users u ON t.assigned_to = u.id LEFT JOIN users c ON t.created_by = c.id
     WHERE t.id = ${req.params.id}
   `;
+  const prevAssigned = prev[0]?.assigned_to;
+  if (assigned_to && Number(assigned_to) !== req.user.id && Number(assigned_to) !== prevAssigned) {
+    sendPushToUser(Number(assigned_to), {
+      title: 'Task asignat ție',
+      body: `"${title}" a fost asignat ție de ${req.user.name}`,
+      url: '/tasks'
+    });
+  }
   res.json(task[0]);
 });
 
