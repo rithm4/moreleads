@@ -307,6 +307,96 @@ a { text-decoration: none; color: inherit; }
 .chart-tooltip { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 13px; box-shadow: var(--shadow-md); }
 .chart-tooltip-label { font-weight: 700; margin-bottom: 4px; color: var(--text-2); font-size: 11px; }
 
+/* ── DASHBOARD V2 ── */
+.dash-welcome { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 24px; }
+.dash-welcome-title { font-size: 22px; font-weight: 800; letter-spacing: -.4px; line-height: 1.1; }
+.dash-wave { display: inline-block; }
+.dash-welcome-date { font-size: 13px; color: var(--text-2); margin-top: 4px; text-transform: capitalize; }
+.dash-welcome-badge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; background: #10b98118; color: #10b981; border: 1px solid #10b98130; letter-spacing: .3px; }
+
+.stats-grid-v2 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+
+.stat-card-v2 {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 18px 16px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform .15s, box-shadow .15s;
+  box-shadow: var(--shadow-sm);
+}
+.stat-card-v2::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--card-gradient);
+  border-radius: 14px 14px 0 0;
+}
+.stat-card-v2:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.stat-card-v2:active { transform: translateY(0); }
+.stat-card-v2-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.stat-card-v2-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--card-gradient);
+  color: #fff;
+  flex-shrink: 0;
+}
+.stat-card-v2-arrow { color: var(--text-3); transition: color .15s; }
+.stat-card-v2:hover .stat-card-v2-arrow { color: var(--text-2); }
+.stat-card-v2-value { font-size: 28px; font-weight: 800; line-height: 1; letter-spacing: -1px; }
+.stat-card-v2-label { font-size: 12px; color: var(--text-2); font-weight: 600; margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+.stat-card-v2-sub { font-size: 12px; color: var(--text-3); margin-top: 3px; }
+
+.dash-grid-v2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.dash-panel-v2 { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; box-shadow: var(--shadow-sm); }
+.dash-panel-v2-full { grid-column: 1 / -1; }
+
+.dash-panel-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.dash-panel-hd-left { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; color: var(--text); }
+.dash-panel-hd-icon { color: var(--primary); flex-shrink: 0; }
+.dash-panel-hd-more { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; color: var(--primary); font-weight: 600; opacity: .8; transition: opacity .12s; }
+.dash-panel-hd-more:hover { opacity: 1; }
+
+.dash-rows { display: flex; flex-direction: column; gap: 1px; }
+.dash-row { display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 8px; cursor: pointer; transition: background .12s; }
+.dash-row:hover { background: var(--surface-2); }
+.dash-row-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dash-row-main { flex: 1; min-width: 0; }
+.dash-row-title { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.dash-row-sub { font-size: 11.5px; color: var(--text-3); display: block; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dash-row-end { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
+.dash-row-value { font-size: 11.5px; font-weight: 600; color: var(--text-2); }
+
+.dash-tag {
+  font-size: 11px; font-weight: 600;
+  padding: 2px 8px; border-radius: 20px;
+  background: var(--tag-color, #6366f1);
+  color: #fff;
+  opacity: .85;
+  white-space: nowrap;
+}
+@supports (background: color-mix(in srgb, red 15%, transparent)) {
+  .dash-tag {
+    background: color-mix(in srgb, var(--tag-color) 15%, transparent);
+    color: var(--tag-color);
+    opacity: 1;
+  }
+}
+
+.dash-activity { display: flex; flex-direction: column; }
+.dash-activity-row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 4px; border-bottom: 1px solid var(--border); }
+.dash-activity-row:last-child { border-bottom: none; }
+.dash-activity-av { width: 28px; height: 28px; border-radius: 8px; background: var(--primary); color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; letter-spacing: -.3px; }
+.dash-activity-body { flex: 1; font-size: 12.5px; line-height: 1.5; }
+.dash-activity-user { font-weight: 700; }
+.dash-activity-action { color: var(--text-2); }
+.dash-activity-detail { color: var(--text); font-weight: 500; }
+.dash-activity-time { font-size: 11px; color: var(--text-3); white-space: nowrap; padding-top: 2px; flex-shrink: 0; }
+
 /* ── PULL TO REFRESH ── */
 .pull-refresh-indicator {
   text-align: center; font-size: 13px; color: var(--primary); font-weight: 600;
@@ -679,6 +769,15 @@ th:hover .col-delete { opacity: 1; }
   .dash-list-item { padding: 8px; }
   .dash-item-title { font-size: 13px; }
   .dash-panel-header h3 { font-size: 13px; }
+
+  /* Dashboard V2 — mobile */
+  .dash-welcome { margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+  .dash-welcome-title { font-size: 18px; }
+  .stats-grid-v2 { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat-card-v2 { padding: 14px 12px 12px; }
+  .stat-card-v2-value { font-size: 22px; }
+  .dash-grid-v2 { grid-template-columns: 1fr; gap: 12px; }
+  .dash-panel-v2 { padding: 14px; }
 
   /* Tasks: hide kanban, show tab list */
   .tasks-kanban-desktop { display: none !important; }
