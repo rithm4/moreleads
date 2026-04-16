@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, TrendingUp, CheckSquare, FolderKanban } from 'lucide-react';
+import { LayoutDashboard, Users, TrendingUp, CheckSquare, Network } from 'lucide-react';
 import { useBadges } from '../../context/BadgeContext';
 
 const items = [
@@ -7,7 +7,7 @@ const items = [
   { to: '/contacts',  icon: Users,           label: 'Clienți' },
   { to: '/pipeline',  icon: TrendingUp,       label: 'Pipeline' },
   { to: '/tasks',     icon: CheckSquare,      label: 'Taskuri',  badge: 'tasks' },
-  { to: '/projects',  icon: FolderKanban,     label: 'Proiecte' },
+  { to: '/canvas',    icon: Network,          label: 'Canvas' },
 ];
 
 export function BottomNav() {

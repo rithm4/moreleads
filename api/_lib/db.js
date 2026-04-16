@@ -155,4 +155,28 @@ export async function initSchema() {
       updated_at  TIMESTAMPTZ DEFAULT NOW()
     )
   `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS canvas_nodes (
+      id         SERIAL PRIMARY KEY,
+      type       TEXT NOT NULL DEFAULT 'note',
+      title      TEXT NOT NULL,
+      body       TEXT,
+      pos_x      FLOAT NOT NULL DEFAULT 100,
+      pos_y      FLOAT NOT NULL DEFAULT 100,
+      entity_id  INTEGER,
+      color      TEXT,
+      created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS canvas_edges (
+      id         SERIAL PRIMARY KEY,
+      source_id  INTEGER NOT NULL REFERENCES canvas_nodes(id) ON DELETE CASCADE,
+      target_id  INTEGER NOT NULL REFERENCES canvas_nodes(id) ON DELETE CASCADE,
+      label      TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
 }

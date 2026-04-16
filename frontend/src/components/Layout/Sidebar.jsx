@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, TrendingUp, CheckSquare, FileText, FolderKanban, X, UserCircle } from 'lucide-react';
+import { LayoutDashboard, Users, TrendingUp, CheckSquare, FileText, FolderKanban, X, UserCircle, Network } from 'lucide-react';
 import { useBadges } from '../../context/BadgeContext';
 
 const links = [
@@ -9,6 +9,7 @@ const links = [
   { to: '/projects',  icon: FolderKanban,     label: 'Proiecte' },
   { to: '/tasks',     icon: CheckSquare,      label: 'Taskuri',  badge: 'tasks' },
   { to: '/notes',     icon: FileText,         label: 'Notițe',   badge: 'notes' },
+  { to: '/canvas',    icon: Network,          label: 'Canvas' },
   { to: '/team',      icon: Users,            label: 'Echipă' },
   { to: '/profile',   icon: UserCircle,       label: 'Profil' },
 ];

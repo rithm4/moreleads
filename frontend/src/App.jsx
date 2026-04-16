@@ -16,6 +16,7 @@ import TasksPage from './pages/TasksPage';
 import NotesPage from './pages/NotesPage';
 import TeamPage from './pages/TeamPage';
 import ProfilePage from './pages/ProfilePage';
+import CanvasPage from './pages/CanvasPage';
 
 export default function App() {
   useEffect(() => {
@@ -47,6 +48,7 @@ export default function App() {
             <Route path="notes" element={<NotesPage />} />
             <Route path="team" element={<TeamPage />} />
             <Route path="profile" element={<ProfilePage />} />
+            <Route path="canvas" element={<CanvasPage />} />
           </Route>
         </Routes>
         </BadgeProvider>
