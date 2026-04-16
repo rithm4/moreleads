@@ -1,127 +1,140 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { FileText, Users, FolderKanban, TrendingUp, Plus, X, Trash2, Link, Unlink, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import { FileText, Users, FolderKanban, TrendingUp, Plus, X, Link, Unlink, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
 
 /* ─── constants ─── */
-const NODE_COLORS = {
-  note:    { bg: '#EFE347', text: '#121721', icon: FileText,    label: 'Notiță' },
-  contact: { bg: '#3462EE', text: '#fff',    icon: Users,       label: 'Contact' },
-  project: { bg: '#4A91A8', text: '#fff',    icon: FolderKanban,label: 'Proiect' },
-  deal:    { bg: '#121721', text: '#fff',    icon: TrendingUp,  label: 'Deal' },
+const NODE_TYPES = {
+  note:    { bg: '#EFE347', text: '#121721', icon: FileText,     label: 'Notiță' },
+  contact: { bg: '#3462EE', text: '#ffffff', icon: Users,        label: 'Contact' },
+  project: { bg: '#4A91A8', text: '#ffffff', icon: FolderKanban, label: 'Proiect' },
+  deal:    { bg: '#1e2a3a', text: '#ffffff', icon: TrendingUp,   label: 'Deal' },
 };
-const NODE_W = 200;
-const NODE_H = 110;
-const HANDLE_SIZE = 12;
+
+const COLOR_PALETTE = [
+  '#EFE347','#3462EE','#4A91A8','#1e2a3a',
+  '#10b981','#f59e0b','#ef4444','#8b5cf6',
+  '#ec4899','#06b6d4','#f97316','#e2e8f0',
+];
+
+const SIZE_OPTIONS = [
+  { label: 'S',  value: 150 },
+  { label: 'M',  value: 200 },
+  { label: 'L',  value: 280 },
+  { label: 'XL', value: 360 },
+];
+
+const DEFAULT_W = 200;
 
 /* ─── helpers ─── */
-function mid(node) {
-  return { x: node.pos_x + NODE_W / 2, y: node.pos_y + NODE_H / 2 };
+function nodeMid(node) {
+  const w = node.node_width || DEFAULT_W;
+  return { x: node.pos_x + w / 2, y: node.pos_y + 55 };
 }
 
-function svgPath(ax, ay, bx, by) {
-  const dx = Math.abs(bx - ax) * 0.5;
+function bezier(ax, ay, bx, by) {
+  const dx = Math.abs(bx - ax) * 0.55;
   return `M ${ax},${ay} C ${ax + dx},${ay} ${bx - dx},${by} ${bx},${by}`;
 }
 
-/* ─── sub-components ─── */
-function NodeCard({ node, selected, connecting, onMouseDown, onEdit, onDelete, onStartEdge, onEndEdge }) {
-  const meta = NODE_COLORS[node.type] || NODE_COLORS.note;
-  const Icon = meta.icon;
-  const col  = node.color || meta.bg;
+function getNodeIdFromElement(el) {
+  let cur = el;
+  while (cur && cur !== document.body) {
+    if (cur.dataset && cur.dataset.nodeid) return Number(cur.dataset.nodeid);
+    cur = cur.parentElement;
+  }
+  return null;
+}
+
+/* ─── NodeCard ─── */
+function NodeCard({ node, selected, onPointerDown, onEdit, onDelete, onHandlePointerDown }) {
+  const meta  = NODE_TYPES[node.type] || NODE_TYPES.note;
+  const Icon  = meta.icon;
+  const bg    = node.color || meta.bg;
+  const color = meta.text;
+  const w     = node.node_width || DEFAULT_W;
+
+  // pick readable text color based on bg luminance
+  function luminance(hex) {
+    const h = hex.replace('#', '');
+    const r = parseInt(h.slice(0,2),16)/255;
+    const g = parseInt(h.slice(2,4),16)/255;
+    const b = parseInt(h.slice(4,6),16)/255;
+    return 0.299*r + 0.587*g + 0.114*b;
+  }
+  const autoText = luminance(bg.replace(/[^0-9a-fA-F]/g,'').padEnd(6,'0')) > 0.55 ? '#121721' : '#ffffff';
 
   return (
     <div
-      className="cv-node"
-      style={{
-        left: node.pos_x,
-        top: node.pos_y,
-        width: NODE_W,
-        minHeight: NODE_H,
-        background: col,
-        color: meta.text,
-        outline: selected ? '2.5px solid #fff' : 'none',
-        outlineOffset: 2,
-        cursor: connecting ? 'crosshair' : 'grab',
-      }}
-      onMouseDown={e => onMouseDown(e, node.id)}
+      className={`cv-node ${selected ? 'selected' : ''}`}
+      data-nodeid={node.id}
+      style={{ left: node.pos_x, top: node.pos_y, width: w, background: bg, color: node.color ? autoText : color }}
+      onPointerDown={e => onPointerDown(e, node.id)}
       onDoubleClick={e => { e.stopPropagation(); onEdit(node); }}
     >
       <div className="cv-node-hd">
-        <Icon size={13} opacity={0.75} />
+        <Icon size={13} opacity={0.7} />
         <span className="cv-node-title">{node.title}</span>
-        <button className="cv-node-del" onClick={e => { e.stopPropagation(); onDelete(node.id); }}>
+        <button className="cv-node-del" onPointerDown={e => e.stopPropagation()} onClick={e => { e.stopPropagation(); onDelete(node.id); }}>
           <X size={11} />
         </button>
       </div>
       {node.body && <p className="cv-node-body">{node.body}</p>}
 
-      {/* connection handles */}
-      {['right', 'bottom', 'left', 'top'].map(side => (
+      {/* handles — 4 sides */}
+      {['top','right','bottom','left'].map(side => (
         <div
           key={side}
           className={`cv-handle cv-handle-${side}`}
-          style={{ width: HANDLE_SIZE, height: HANDLE_SIZE }}
-          onMouseDown={e => { e.stopPropagation(); onStartEdge(e, node.id); }}
-          onMouseUp={e => { e.stopPropagation(); onEndEdge(node.id); }}
+          onPointerDown={e => { e.stopPropagation(); onHandlePointerDown(e, node.id); }}
         />
       ))}
     </div>
   );
 }
 
-function EdgeSvg({ nodes, edges, onDeleteEdge, pendingEdge, mousePos }) {
-  const nodeMap = Object.fromEntries(nodes.map(n => [n.id, n]));
+/* ─── EdgeSvg ─── */
+function EdgeSvg({ nodes, edges, onDeleteEdge, pendingSource, cursorPos }) {
+  const map = Object.fromEntries(nodes.map(n => [n.id, n]));
   return (
-    <svg
-      className="cv-edges"
-      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'visible', pointerEvents: 'none' }}
-    >
+    <svg className="cv-edges" style={{ position:'absolute', inset:0, width:'100%', height:'100%', overflow:'visible', pointerEvents:'none' }}>
       <defs>
-        <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-          <path d="M0,0 L0,6 L8,3 z" fill="rgba(255,255,255,.5)" />
+        <marker id="arr" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+          <path d="M0,0 L0,7 L7,3.5 z" fill="rgba(255,255,255,.55)" />
         </marker>
       </defs>
 
       {edges.map(e => {
-        const s = nodeMap[e.source_id];
-        const t = nodeMap[e.target_id];
+        const s = map[e.source_id], t = map[e.target_id];
         if (!s || !t) return null;
-        const sm = mid(s), tm = mid(t);
+        const sm = nodeMid(s), tm = nodeMid(t);
         return (
-          <g key={e.id} style={{ pointerEvents: 'all', cursor: 'pointer' }}
-            onClick={() => onDeleteEdge(e.id)}>
-            {/* fat invisible hit area */}
-            <path d={svgPath(sm.x, sm.y, tm.x, tm.y)} stroke="transparent" strokeWidth={14} fill="none" />
-            <path d={svgPath(sm.x, sm.y, tm.x, tm.y)}
-              stroke="rgba(255,255,255,.35)" strokeWidth={2} fill="none"
-              strokeDasharray="6 3" markerEnd="url(#arr)" />
+          <g key={e.id} style={{ pointerEvents:'all', cursor:'pointer' }} onClick={() => onDeleteEdge(e.id)}>
+            <path d={bezier(sm.x,sm.y,tm.x,tm.y)} stroke="transparent" strokeWidth={16} fill="none" />
+            <path d={bezier(sm.x,sm.y,tm.x,tm.y)} stroke="rgba(255,255,255,.38)" strokeWidth={1.8} fill="none" strokeDasharray="6 3" markerEnd="url(#arr)" />
             {e.label && (
-              <text x={(sm.x + tm.x) / 2} y={(sm.y + tm.y) / 2 - 6}
-                textAnchor="middle" fontSize={11} fill="rgba(255,255,255,.6)">{e.label}</text>
+              <text x={(sm.x+tm.x)/2} y={(sm.y+tm.y)/2-7} textAnchor="middle" fontSize={10} fill="rgba(255,255,255,.55)">{e.label}</text>
             )}
           </g>
         );
       })}
 
-      {/* pending edge while dragging */}
-      {pendingEdge && mousePos && (() => {
-        const s = nodeMap[pendingEdge.sourceId];
+      {/* live preview edge while dragging */}
+      {pendingSource !== null && cursorPos && (() => {
+        const s = map[pendingSource];
         if (!s) return null;
-        const sm = mid(s);
-        return (
-          <path d={svgPath(sm.x, sm.y, mousePos.x, mousePos.y)}
-            stroke="rgba(255,255,255,.5)" strokeWidth={2} fill="none" strokeDasharray="4 3" />
-        );
+        const sm = nodeMid(s);
+        return <path d={bezier(sm.x,sm.y,cursorPos.x,cursorPos.y)} stroke="rgba(255,255,255,.6)" strokeWidth={1.8} fill="none" strokeDasharray="4 3" />;
       })()}
     </svg>
   );
 }
 
+/* ─── AddNodeModal ─── */
 function AddNodeModal({ onAdd, onClose }) {
-  const [type, setType] = useState('note');
+  const [type,  setType]  = useState('note');
   const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
+  const [body,  setBody]  = useState('');
 
   function submit(e) {
     e.preventDefault();
@@ -132,26 +145,23 @@ function AddNodeModal({ onAdd, onClose }) {
   return (
     <div className="cv-modal-bg" onClick={onClose}>
       <div className="cv-modal" onClick={e => e.stopPropagation()}>
-        <div className="cv-modal-hd">
-          <span>Nod nou</span>
-          <button onClick={onClose}><X size={16} /></button>
-        </div>
+        <div className="cv-modal-hd"><span>Nod nou</span><button onClick={onClose}><X size={16}/></button></div>
         <form onSubmit={submit} className="cv-modal-form">
           <div className="cv-modal-types">
-            {Object.entries(NODE_COLORS).map(([k, v]) => {
+            {Object.entries(NODE_TYPES).map(([k, v]) => {
               const Icon = v.icon;
               return (
                 <button key={k} type="button"
-                  className={`cv-type-btn ${type === k ? 'active' : ''}`}
-                  style={type === k ? { background: v.bg, color: v.text } : {}}
+                  className={`cv-type-btn ${type===k?'active':''}`}
+                  style={type===k ? { background: v.bg, color: v.text } : {}}
                   onClick={() => setType(k)}>
-                  <Icon size={14} /> {v.label}
+                  <Icon size={13}/> {v.label}
                 </button>
               );
             })}
           </div>
-          <input className="cv-input" placeholder="Titlu *" value={title} onChange={e => setTitle(e.target.value)} autoFocus />
-          <textarea className="cv-input cv-textarea" placeholder="Conținut (opțional)" value={body} onChange={e => setBody(e.target.value)} rows={3} />
+          <input className="cv-input" placeholder="Titlu *" value={title} onChange={e=>setTitle(e.target.value)} autoFocus />
+          <textarea className="cv-input cv-textarea" placeholder="Conținut (opțional)" value={body} onChange={e=>setBody(e.target.value)} rows={3}/>
           <button className="cv-submit-btn" type="submit">Adaugă</button>
         </form>
       </div>
@@ -159,28 +169,67 @@ function AddNodeModal({ onAdd, onClose }) {
   );
 }
 
+/* ─── EditNodeModal ─── */
 function EditNodeModal({ node, onSave, onClose }) {
-  const [title, setTitle] = useState(node.title);
-  const [body, setBody] = useState(node.body || '');
+  const meta = NODE_TYPES[node.type] || NODE_TYPES.note;
+  const [title,  setTitle]  = useState(node.title);
+  const [body,   setBody]   = useState(node.body || '');
+  const [color,  setColor]  = useState(node.color || meta.bg);
+  const [width,  setWidth]  = useState(node.node_width || DEFAULT_W);
+  const [custom, setCustom] = useState(node.color || '');
 
   function submit(e) {
     e.preventDefault();
     if (!title.trim()) { toast.error('Titlul este obligatoriu'); return; }
-    onSave(node.id, { title: title.trim(), body: body.trim() });
+    onSave(node.id, { title: title.trim(), body: body.trim(), color, node_width: width });
   }
 
-  const meta = NODE_COLORS[node.type] || NODE_COLORS.note;
+  function pickColor(c) { setColor(c); setCustom(c); }
 
   return (
     <div className="cv-modal-bg" onClick={onClose}>
-      <div className="cv-modal" onClick={e => e.stopPropagation()}>
-        <div className="cv-modal-hd" style={{ background: node.color || meta.bg, color: meta.text }}>
+      <div className="cv-modal" onClick={e=>e.stopPropagation()}>
+        <div className="cv-modal-hd" style={{ background: color, color: getAutoText(color) }}>
           <span>Editează nod</span>
-          <button onClick={onClose} style={{ color: meta.text }}><X size={16} /></button>
+          <button onClick={onClose} style={{ color: getAutoText(color) }}><X size={16}/></button>
         </div>
         <form onSubmit={submit} className="cv-modal-form">
-          <input className="cv-input" placeholder="Titlu *" value={title} onChange={e => setTitle(e.target.value)} autoFocus />
-          <textarea className="cv-input cv-textarea" placeholder="Conținut" value={body} onChange={e => setBody(e.target.value)} rows={4} />
+          <input className="cv-input" placeholder="Titlu *" value={title} onChange={e=>setTitle(e.target.value)} autoFocus />
+          <textarea className="cv-input cv-textarea" placeholder="Conținut" value={body} onChange={e=>setBody(e.target.value)} rows={3}/>
+
+          {/* color picker */}
+          <div>
+            <div className="cv-label">Culoare</div>
+            <div className="cv-color-grid">
+              {COLOR_PALETTE.map(c => (
+                <div key={c} className={`cv-color-swatch ${color===c?'active':''}`}
+                  style={{ background: c, border: c === '#e2e8f0' ? '1px solid rgba(255,255,255,.15)' : 'none' }}
+                  onClick={() => pickColor(c)} />
+              ))}
+              <input
+                type="color"
+                className="cv-color-custom"
+                value={custom.startsWith('#') && custom.length===7 ? custom : '#3462EE'}
+                onChange={e => pickColor(e.target.value)}
+                title="Culoare personalizată"
+              />
+            </div>
+          </div>
+
+          {/* size picker */}
+          <div>
+            <div className="cv-label">Mărime</div>
+            <div className="cv-size-btns">
+              {SIZE_OPTIONS.map(s => (
+                <button key={s.value} type="button"
+                  className={`cv-size-btn ${width===s.value?'active':''}`}
+                  onClick={() => setWidth(s.value)}>
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <button className="cv-submit-btn" type="submit">Salvează</button>
         </form>
       </div>
@@ -188,105 +237,156 @@ function EditNodeModal({ node, onSave, onClose }) {
   );
 }
 
-/* ─── main page ─── */
+function getAutoText(hex) {
+  try {
+    const h = hex.replace('#','');
+    const r = parseInt(h.slice(0,2),16)/255;
+    const g = parseInt(h.slice(2,4),16)/255;
+    const b = parseInt(h.slice(4,6),16)/255;
+    return (0.299*r + 0.587*g + 0.114*b) > 0.55 ? '#121721' : '#ffffff';
+  } catch { return '#ffffff'; }
+}
+
+/* ─── CanvasPage ─── */
 export default function CanvasPage() {
-  const [nodes, setNodes] = useState([]);
-  const [edges, setEdges] = useState([]);
+  const [nodes,   setNodes]   = useState([]);
+  const [edges,   setEdges]   = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // viewport
-  const [pan, setPan]   = useState({ x: 0, y: 0 });
+  const [pan,  setPan]  = useState({ x: 60, y: 60 });
   const [zoom, setZoom] = useState(1);
 
-  // interaction states
-  const [draggingNode, setDraggingNode]     = useState(null); // { id, startMouse, startPos }
-  const [panStart, setPanStart]             = useState(null);  // { x, y, panX, panY }
-  const [connectMode, setConnectMode]       = useState(false);
-  const [pendingEdge, setPendingEdge]       = useState(null);  // { sourceId }
-  const [mousePos, setMousePos]             = useState(null);  // canvas coords for pending edge
-  const [showAdd, setShowAdd]               = useState(false);
-  const [editNode, setEditNode]             = useState(null);
-  const [selected, setSelected]             = useState(null);
+  // drag node: { id, startMx, startMy, startPx, startPy }
+  const draggingNode = useRef(null);
+  // pan: { startMx, startMy, startPanX, startPanY }
+  const panDrag = useRef(null);
+  // edge connection: pendingSource nodeId | null
+  const [pendingSource, setPendingSource] = useState(null);
+  const [cursorPos,     setCursorPos]     = useState(null);
+  const pendingSourceRef = useRef(null); // mirror for use in events
 
-  const canvasRef = useRef(null);
-  const saveTimer = useRef({});
+  const [showAdd,  setShowAdd]  = useState(false);
+  const [editNode, setEditNode] = useState(null);
+  const [selected, setSelected] = useState(null);
+
+  const canvasRef  = useRef(null);
+  const saveTimers = useRef({});
+  const nodesRef   = useRef(nodes); // mirror for use in pointer events
+  useEffect(() => { nodesRef.current = nodes; }, [nodes]);
 
   // ── load ──
   useEffect(() => {
-    api.get('/canvas').then(r => {
-      setNodes(r.data.nodes);
-      setEdges(r.data.edges);
-    }).catch(() => toast.error('Nu am putut încărca canvas-ul')).finally(() => setLoading(false));
+    api.get('/canvas')
+      .then(r => { setNodes(r.data.nodes); setEdges(r.data.edges); })
+      .catch(() => toast.error('Nu am putut încărca canvas-ul'))
+      .finally(() => setLoading(false));
   }, []);
 
-  // ── canvas coords from screen event ──
+  // ── canvas coords ──
   const toCanvas = useCallback((clientX, clientY) => {
     const rect = canvasRef.current.getBoundingClientRect();
-    return {
-      x: (clientX - rect.left - pan.x) / zoom,
-      y: (clientY - rect.top  - pan.y) / zoom,
-    };
+    return { x: (clientX - rect.left - pan.x) / zoom, y: (clientY - rect.top - pan.y) / zoom };
   }, [pan, zoom]);
 
-  // ── node drag ──
-  const onNodeMouseDown = useCallback((e, id) => {
+  const toCanvasRef = useRef(toCanvas);
+  useEffect(() => { toCanvasRef.current = toCanvas; }, [toCanvas]);
+
+  // ── pointer down on node body ──
+  const onNodePointerDown = useCallback((e, id) => {
     if (e.button !== 0) return;
     e.stopPropagation();
-    if (connectMode) return; // handled by handles
+    // if in connect mode: clicking body does nothing (handles do the work)
+    if (pendingSourceRef.current !== null) return;
     setSelected(id);
-    const node = nodes.find(n => n.id === id);
-    setDraggingNode({
-      id,
-      startMouse: { x: e.clientX, y: e.clientY },
-      startPos: { x: node.pos_x, y: node.pos_y },
-    });
-  }, [nodes, connectMode]);
+    const node = nodesRef.current.find(n => n.id === id);
+    draggingNode.current = { id, startMx: e.clientX, startMy: e.clientY, startPx: node.pos_x, startPy: node.pos_y };
+    canvasRef.current.setPointerCapture(e.pointerId);
+  }, []);
 
-  // ── canvas pan (background mousedown) ──
-  const onBgMouseDown = useCallback((e) => {
+  // ── pointer down on handle ──
+  const onHandlePointerDown = useCallback((e, sourceId) => {
+    if (e.button !== 0) return;
+    e.stopPropagation();
+    pendingSourceRef.current = sourceId;
+    setPendingSource(sourceId);
+    setCursorPos(toCanvasRef.current(e.clientX, e.clientY));
+    canvasRef.current.setPointerCapture(e.pointerId);
+  }, []);
+
+  // ── background pointer down (pan) ──
+  const onBgPointerDown = useCallback((e) => {
     if (e.button !== 0) return;
     setSelected(null);
-    if (connectMode) { setPendingEdge(null); return; }
-    setPanStart({ x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y });
-  }, [pan, connectMode]);
-
-  const onMouseMove = useCallback((e) => {
-    if (draggingNode) {
-      const dx = (e.clientX - draggingNode.startMouse.x) / zoom;
-      const dy = (e.clientY - draggingNode.startMouse.y) / zoom;
-      const newX = draggingNode.startPos.x + dx;
-      const newY = draggingNode.startPos.y + dy;
-      setNodes(prev => prev.map(n => n.id === draggingNode.id ? { ...n, pos_x: newX, pos_y: newY } : n));
-    } else if (panStart) {
-      const dx = e.clientX - panStart.x;
-      const dy = e.clientY - panStart.y;
-      setPan({ x: panStart.panX + dx, y: panStart.panY + dy });
+    // cancel pending edge if clicking empty space
+    if (pendingSourceRef.current !== null) {
+      pendingSourceRef.current = null;
+      setPendingSource(null);
+      setCursorPos(null);
+      return;
     }
-    if (pendingEdge) {
-      setMousePos(toCanvas(e.clientX, e.clientY));
-    }
-  }, [draggingNode, panStart, pendingEdge, zoom, toCanvas]);
+    panDrag.current = { startMx: e.clientX, startMy: e.clientY, startPanX: pan.x, startPanY: pan.y };
+    canvasRef.current.setPointerCapture(e.pointerId);
+  }, [pan]);
 
-  const onMouseUp = useCallback((e) => {
-    if (draggingNode) {
-      const node = nodes.find(n => n.id === draggingNode.id);
-      if (node) {
-        clearTimeout(saveTimer.current[node.id]);
-        saveTimer.current[node.id] = setTimeout(() => {
-          api.patch(`/canvas/nodes/${node.id}`, { pos_x: node.pos_x, pos_y: node.pos_y })
-            .catch(() => {});
-        }, 400);
+  // ── pointer move ──
+  const onPointerMove = useCallback((e) => {
+    if (draggingNode.current) {
+      const { id, startMx, startMy, startPx, startPy } = draggingNode.current;
+      const dx = (e.clientX - startMx) / zoom;
+      const dy = (e.clientY - startMy) / zoom;
+      setNodes(prev => prev.map(n => n.id === id ? { ...n, pos_x: startPx + dx, pos_y: startPy + dy } : n));
+    } else if (panDrag.current) {
+      const { startMx, startMy, startPanX, startPanY } = panDrag.current;
+      setPan({ x: startPanX + (e.clientX - startMx), y: startPanY + (e.clientY - startMy) });
+    }
+    if (pendingSourceRef.current !== null) {
+      setCursorPos(toCanvasRef.current(e.clientX, e.clientY));
+    }
+  }, [zoom]);
+
+  // ── pointer up ──
+  const onPointerUp = useCallback(async (e) => {
+    // 1. finish edge connection
+    if (pendingSourceRef.current !== null) {
+      const sourceId = pendingSourceRef.current;
+      pendingSourceRef.current = null;
+      setPendingSource(null);
+      setCursorPos(null);
+
+      // find target node from element under cursor
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const targetId = el ? getNodeIdFromElement(el) : null;
+
+      if (targetId !== null && targetId !== sourceId) {
+        try {
+          const r = await api.post('/canvas/edges', { source_id: sourceId, target_id: targetId });
+          setEdges(prev => prev.find(x => x.id === r.data.id) ? prev : [...prev, r.data]);
+        } catch { toast.error('Eroare la conectare'); }
       }
-      setDraggingNode(null);
+      return;
     }
-    setPanStart(null);
-  }, [draggingNode, nodes]);
 
-  // ── zoom ──
+    // 2. finish node drag — save position
+    if (draggingNode.current) {
+      const { id } = draggingNode.current;
+      draggingNode.current = null;
+      const node = nodesRef.current.find(n => n.id === id);
+      if (node) {
+        clearTimeout(saveTimers.current[id]);
+        saveTimers.current[id] = setTimeout(() => {
+          api.patch(`/canvas/nodes/${id}`, { pos_x: node.pos_x, pos_y: node.pos_y }).catch(() => {});
+        }, 300);
+      }
+    }
+
+    panDrag.current = null;
+  }, []);
+
+  // ── wheel zoom ──
   const onWheel = useCallback((e) => {
     e.preventDefault();
-    const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    setZoom(z => Math.min(3, Math.max(0.2, z * delta)));
+    const factor = e.deltaY > 0 ? 0.92 : 1.08;
+    setZoom(z => Math.min(4, Math.max(0.15, z * factor)));
   }, []);
 
   useEffect(() => {
@@ -298,8 +398,8 @@ export default function CanvasPage() {
 
   // ── add node ──
   async function handleAddNode({ type, title, body }) {
-    const cx = (canvasRef.current.clientWidth  / 2 - pan.x) / zoom - NODE_W / 2;
-    const cy = (canvasRef.current.clientHeight / 2 - pan.y) / zoom - NODE_H / 2;
+    const cx = (canvasRef.current.clientWidth  / 2 - pan.x) / zoom - DEFAULT_W / 2;
+    const cy = (canvasRef.current.clientHeight / 2 - pan.y) / zoom - 55;
     try {
       const r = await api.post('/canvas/nodes', { type, title, body, pos_x: cx, pos_y: cy });
       setNodes(prev => [...prev, r.data]);
@@ -308,9 +408,9 @@ export default function CanvasPage() {
   }
 
   // ── edit node ──
-  async function handleEditSave(id, { title, body }) {
+  async function handleEditSave(id, data) {
     try {
-      const r = await api.patch(`/canvas/nodes/${id}`, { title, body });
+      const r = await api.patch(`/canvas/nodes/${id}`, data);
       setNodes(prev => prev.map(n => n.id === id ? r.data : n));
       setEditNode(null);
     } catch { toast.error('Eroare la salvare'); }
@@ -318,144 +418,101 @@ export default function CanvasPage() {
 
   // ── delete node ──
   async function handleDeleteNode(id) {
-    try {
-      await api.delete(`/canvas/nodes/${id}`);
-      setNodes(prev => prev.filter(n => n.id !== id));
-      setEdges(prev => prev.filter(e => e.source_id !== id && e.target_id !== id));
-    } catch { toast.error('Eroare la ștergere'); }
+    await api.delete(`/canvas/nodes/${id}`).catch(() => {});
+    setNodes(prev => prev.filter(n => n.id !== id));
+    setEdges(prev => prev.filter(e => e.source_id !== id && e.target_id !== id));
   }
 
-  // ── edge creation ──
-  function onStartEdge(e, sourceId) {
-    if (!connectMode) return;
-    e.stopPropagation();
-    setPendingEdge({ sourceId });
-    setMousePos(toCanvas(e.clientX, e.clientY));
-  }
-
-  async function onEndEdge(targetId) {
-    if (!connectMode || !pendingEdge) return;
-    const { sourceId } = pendingEdge;
-    setPendingEdge(null);
-    setMousePos(null);
-    if (sourceId === targetId) return;
-    try {
-      const r = await api.post('/canvas/edges', { source_id: sourceId, target_id: targetId });
-      setEdges(prev => {
-        if (prev.find(e => e.id === r.data.id)) return prev;
-        return [...prev, r.data];
-      });
-    } catch { toast.error('Eroare la conectare'); }
-  }
-
+  // ── delete edge ──
   async function handleDeleteEdge(id) {
-    try {
-      await api.delete(`/canvas/edges/${id}`);
-      setEdges(prev => prev.filter(e => e.id !== id));
-    } catch { toast.error('Eroare la ștergere legătură'); }
+    await api.delete(`/canvas/edges/${id}`).catch(() => {});
+    setEdges(prev => prev.filter(e => e.id !== id));
   }
 
-  // ── fit to content ──
+  // ── fit view ──
   function fitView() {
-    if (!nodes.length) { setPan({ x: 0, y: 0 }); setZoom(1); return; }
+    if (!nodes.length) { setPan({ x: 60, y: 60 }); setZoom(1); return; }
     const xs = nodes.map(n => n.pos_x), ys = nodes.map(n => n.pos_y);
-    const minX = Math.min(...xs), maxX = Math.max(...xs) + NODE_W;
-    const minY = Math.min(...ys), maxY = Math.max(...ys) + NODE_H;
-    const w = canvasRef.current.clientWidth;
-    const h = canvasRef.current.clientHeight;
-    const z = Math.min(2, 0.9 * Math.min(w / (maxX - minX + 80), h / (maxY - minY + 80)));
-    setPan({ x: (w - (maxX + minX) * z) / 2, y: (h - (maxY + minY) * z) / 2 });
+    const ws = nodes.map(n => n.node_width || DEFAULT_W);
+    const minX = Math.min(...xs), maxX = Math.max(...nodes.map((n,i)=> xs[i]+ws[i]));
+    const minY = Math.min(...ys), maxY = Math.max(...ys) + 120;
+    const cw = canvasRef.current.clientWidth, ch = canvasRef.current.clientHeight;
+    const z  = Math.min(2, 0.85 * Math.min(cw / (maxX-minX+80), ch / (maxY-minY+80)));
+    setPan({ x: (cw - (maxX+minX)*z)/2, y: (ch - (maxY+minY)*z)/2 });
     setZoom(z);
   }
 
   if (loading) return <div className="cv-loading">Se încarcă canvas-ul...</div>;
 
+  const isConnecting = pendingSource !== null;
+
   return (
     <div className="cv-page">
       {/* toolbar */}
       <div className="cv-toolbar">
-        <span className="cv-toolbar-title">
-          <span className="cv-dot" />
-          Canvas
-        </span>
+        <span className="cv-toolbar-title"><span className="cv-dot" />Canvas</span>
         <div className="cv-toolbar-actions">
-          <button
-            className={`cv-tb-btn ${connectMode ? 'active' : ''}`}
-            onClick={() => { setConnectMode(c => !c); setPendingEdge(null); }}
-            title={connectMode ? 'Ieși din modul conectare' : 'Conectează noduri'}
-          >
-            {connectMode ? <Unlink size={15} /> : <Link size={15} />}
-            {connectMode ? 'Anulează' : 'Conectează'}
-          </button>
-          <button className="cv-tb-btn" onClick={() => setZoom(z => Math.min(3, z * 1.2))} title="Zoom in"><ZoomIn size={15} /></button>
-          <button className="cv-tb-btn" onClick={() => setZoom(z => Math.max(0.2, z / 1.2))} title="Zoom out"><ZoomOut size={15} /></button>
-          <button className="cv-tb-btn" onClick={fitView} title="Fit"><Maximize2 size={15} /></button>
-          <button className="cv-tb-btn primary" onClick={() => setShowAdd(true)}>
-            <Plus size={15} /> Nod nou
-          </button>
+          <button className="cv-tb-btn" onClick={() => setZoom(z => Math.min(4, z*1.15))} title="Zoom in"><ZoomIn size={15}/></button>
+          <button className="cv-tb-btn" onClick={() => setZoom(z => Math.max(0.15, z/1.15))} title="Zoom out"><ZoomOut size={15}/></button>
+          <button className="cv-tb-btn" onClick={fitView} title="Fit în ecran"><Maximize2 size={15}/></button>
+          <button className="cv-tb-btn primary" onClick={() => setShowAdd(true)}><Plus size={15}/> Nod nou</button>
         </div>
       </div>
 
-      {/* hint */}
-      {connectMode && (
+      {/* connect hint */}
+      {isConnecting && (
         <div className="cv-connect-hint">
-          Trage de pe un handle (cerc alb) la alt nod pentru a crea o legătură. Click pe o legătură o șterge.
+          Trage până la alt nod pentru a crea o legătură — eliberează mouse-ul pe nod. <strong>Click pe o legătură</strong> o șterge.
         </div>
       )}
 
-      {/* canvas area */}
+      {/* canvas */}
       <div
         ref={canvasRef}
-        className={`cv-canvas ${connectMode ? 'connect-mode' : ''} ${panStart ? 'panning' : ''}`}
-        onMouseDown={onBgMouseDown}
-        onMouseMove={onMouseMove}
-        onMouseUp={onMouseUp}
-        onMouseLeave={onMouseUp}
+        className={`cv-canvas ${isConnecting ? 'connecting' : ''}`}
+        onPointerDown={onBgPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        style={{ touchAction: 'none' }}
       >
         <div
           className="cv-world"
-          style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: '0 0' }}
+          style={{ transform: `translate(${pan.x}px,${pan.y}px) scale(${zoom})`, transformOrigin: '0 0' }}
         >
-          {/* SVG edges layer */}
           <EdgeSvg
             nodes={nodes}
             edges={edges}
             onDeleteEdge={handleDeleteEdge}
-            pendingEdge={pendingEdge}
-            mousePos={mousePos}
+            pendingSource={pendingSource}
+            cursorPos={cursorPos}
           />
 
-          {/* nodes */}
           {nodes.map(node => (
             <NodeCard
               key={node.id}
               node={node}
               selected={selected === node.id}
-              connecting={connectMode}
-              onMouseDown={onNodeMouseDown}
+              onPointerDown={onNodePointerDown}
               onEdit={setEditNode}
               onDelete={handleDeleteNode}
-              onStartEdge={onStartEdge}
-              onEndEdge={onEndEdge}
+              onHandlePointerDown={onHandlePointerDown}
             />
           ))}
         </div>
 
-        {/* empty state */}
         {!nodes.length && (
           <div className="cv-empty">
             <div className="cv-empty-icon">◈</div>
             <p>Canvas gol</p>
-            <p style={{ opacity: .6, fontSize: 13 }}>Adaugă primul nod cu butonul din dreapta sus</p>
+            <p style={{ opacity:.55, fontSize:13 }}>Adaugă primul nod cu butonul din dreapta sus</p>
           </div>
         )}
       </div>
 
-      {/* zoom badge */}
-      <div className="cv-zoom-badge">{Math.round(zoom * 100)}%</div>
+      <div className="cv-zoom-badge">{Math.round(zoom*100)}%</div>
+      <div className="cv-help-hint">Trage de pe ● pentru a conecta noduri &nbsp;·&nbsp; Dublu-click pe nod pentru editare</div>
 
-      {/* modals */}
-      {showAdd && <AddNodeModal onAdd={handleAddNode} onClose={() => setShowAdd(false)} />}
+      {showAdd  && <AddNodeModal onAdd={handleAddNode} onClose={() => setShowAdd(false)} />}
       {editNode && <EditNodeModal node={editNode} onSave={handleEditSave} onClose={() => setEditNode(null)} />}
     </div>
   );

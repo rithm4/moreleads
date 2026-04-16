@@ -155,6 +155,7 @@ export async function initSchema() {
       updated_at  TIMESTAMPTZ DEFAULT NOW()
     )
   `;
+  await sql`ALTER TABLE canvas_nodes ADD COLUMN IF NOT EXISTS node_width INTEGER DEFAULT 200`;
   await sql`
     CREATE TABLE IF NOT EXISTS canvas_nodes (
       id         SERIAL PRIMARY KEY,

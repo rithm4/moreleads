@@ -38,13 +38,14 @@ router.patch('/nodes/:id', async (req, res) => {
   const existing = await sql`SELECT * FROM canvas_nodes WHERE id = ${req.params.id}`;
   if (!existing.length) return res.status(404).json({ error: 'Nodul nu există' });
   const node = existing[0];
-  const pos_x = req.body.pos_x !== undefined ? req.body.pos_x : node.pos_x;
-  const pos_y = req.body.pos_y !== undefined ? req.body.pos_y : node.pos_y;
-  const title = req.body.title !== undefined ? req.body.title : node.title;
-  const body  = req.body.body  !== undefined ? req.body.body  : node.body;
-  const color = req.body.color !== undefined ? req.body.color : node.color;
+  const pos_x      = req.body.pos_x      !== undefined ? req.body.pos_x      : node.pos_x;
+  const pos_y      = req.body.pos_y      !== undefined ? req.body.pos_y      : node.pos_y;
+  const title      = req.body.title      !== undefined ? req.body.title      : node.title;
+  const body       = req.body.body       !== undefined ? req.body.body       : node.body;
+  const color      = req.body.color      !== undefined ? req.body.color      : node.color;
+  const node_width = req.body.node_width !== undefined ? req.body.node_width : (node.node_width || 200);
   const updated = await sql`
-    UPDATE canvas_nodes SET pos_x=${pos_x}, pos_y=${pos_y}, title=${title}, body=${body || null}, color=${color || null}, updated_at=NOW()
+    UPDATE canvas_nodes SET pos_x=${pos_x}, pos_y=${pos_y}, title=${title}, body=${body || null}, color=${color || null}, node_width=${node_width}, updated_at=NOW()
     WHERE id=${req.params.id} RETURNING *
   `;
   res.json(updated[0]);
