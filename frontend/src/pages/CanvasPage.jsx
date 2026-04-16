@@ -401,30 +401,31 @@ export default function CanvasPage() {
     window.addEventListener('pointerup',   onUp);
   }
 
-  /* ── mouse wheel zoom ── */
-  const onWheel = useCallback((e) => {
-    e.preventDefault();
-    const factor = e.deltaY > 0 ? 0.92 : 1.09;
-    const rect = canvasRef.current.getBoundingClientRect();
-    const mx   = e.clientX - rect.left;
-    const my   = e.clientY - rect.top;
-    // read current values from refs so both updates use consistent state
-    const z  = zoomRef.current;
-    const p  = panRef.current;
-    const nz = Math.min(4, Math.max(0.1, z * factor));
-    setZoom(nz);
-    setPan({
-      x: mx - (mx - p.x) * (nz / z),
-      y: my - (my - p.y) * (nz / z),
-    });
-  }, []);
-
+  /* ── mouse wheel / touchpad zoom ──
+     Listener pe window cu capture:true ca să prindă evenimentul
+     înainte ca .page-content (overflow-y:auto) să-l consume pentru scroll */
   useEffect(() => {
-    const el = canvasRef.current;
-    if (!el) return;
-    el.addEventListener('wheel', onWheel, { passive: false });
-    return () => el.removeEventListener('wheel', onWheel);
-  }, [onWheel]);
+    function onWheel(e) {
+      if (!canvasRef.current) return;
+      if (!canvasRef.current.contains(e.target)) return; // nu e deasupra canvas-ului
+      e.preventDefault();
+      e.stopPropagation();
+      const factor = e.deltaY > 0 ? 0.92 : 1.09;
+      const rect   = canvasRef.current.getBoundingClientRect();
+      const mx     = e.clientX - rect.left;
+      const my     = e.clientY - rect.top;
+      const z      = zoomRef.current;
+      const p      = panRef.current;
+      const nz     = Math.min(4, Math.max(0.1, z * factor));
+      setZoom(nz);
+      setPan({
+        x: mx - (mx - p.x) * (nz / z),
+        y: my - (my - p.y) * (nz / z),
+      });
+    }
+    window.addEventListener('wheel', onWheel, { passive: false, capture: true });
+    return () => window.removeEventListener('wheel', onWheel, { capture: true });
+  }, []);
 
   /* ── touch pinch zoom ── */
   function onTouchStart(e) {
