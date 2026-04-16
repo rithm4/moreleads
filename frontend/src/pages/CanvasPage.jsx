@@ -405,17 +405,17 @@ export default function CanvasPage() {
   const onWheel = useCallback((e) => {
     e.preventDefault();
     const factor = e.deltaY > 0 ? 0.92 : 1.09;
-    // zoom toward mouse cursor
     const rect = canvasRef.current.getBoundingClientRect();
     const mx   = e.clientX - rect.left;
     const my   = e.clientY - rect.top;
-    setZoom(z => {
-      const nz = Math.min(4, Math.max(0.1, z * factor));
-      setPan(p => ({
-        x: mx - (mx - p.x) * (nz / z),
-        y: my - (my - p.y) * (nz / z),
-      }));
-      return nz;
+    // read current values from refs so both updates use consistent state
+    const z  = zoomRef.current;
+    const p  = panRef.current;
+    const nz = Math.min(4, Math.max(0.1, z * factor));
+    setZoom(nz);
+    setPan({
+      x: mx - (mx - p.x) * (nz / z),
+      y: my - (my - p.y) * (nz / z),
     });
   }, []);
 
